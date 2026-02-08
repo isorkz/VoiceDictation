@@ -68,14 +68,14 @@ fn macos_paste() -> Result<(), String> {
     let source = CGEventSource::new(CGEventSourceStateID::HIDSystemState)
         .map_err(|e| format!("failed to create event source: {e:?}"))?;
 
-    let mut key_down =
-        CGEvent::new_keyboard_event(source.clone(), KEY_V, true).ok_or("failed to create keydown")?;
-    key_down.set_flags(CGEventFlags::CGEventFlagMaskCommand);
+    let key_down = CGEvent::new_keyboard_event(source.clone(), KEY_V, true)
+        .map_err(|_| "failed to create keydown".to_string())?;
+    key_down.set_flags(CGEventFlags::CGEventFlagCommand);
     key_down.post(CGEventTapLocation::HID);
 
-    let mut key_up =
-        CGEvent::new_keyboard_event(source, KEY_V, false).ok_or("failed to create keyup")?;
-    key_up.set_flags(CGEventFlags::CGEventFlagMaskCommand);
+    let key_up = CGEvent::new_keyboard_event(source, KEY_V, false)
+        .map_err(|_| "failed to create keyup".to_string())?;
+    key_up.set_flags(CGEventFlags::CGEventFlagCommand);
     key_up.post(CGEventTapLocation::HID);
 
     Ok(())
@@ -119,4 +119,3 @@ fn windows_paste() -> Result<(), String> {
     }
     Ok(())
 }
-
