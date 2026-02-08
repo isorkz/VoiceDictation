@@ -4,6 +4,7 @@ mod azure_transcribe;
 mod insert;
 mod app_state;
 mod tray;
+mod key_listener;
 
 use serde::Serialize;
 use std::sync::Mutex;
@@ -217,6 +218,13 @@ pub fn run() {
         .plugin(tauri_plugin_opener::init())
         .setup(|app| {
             tray::setup(&app.handle())?;
+            key_listener::init(&app.handle()).map_err(|e| {
+                tauri::Error::Setup(
+                    (Box::new(std::io::Error::new(std::io::ErrorKind::Other, e))
+                        as Box<dyn std::error::Error>)
+                        .into(),
+                )
+            })?;
             Ok(())
         })
         .invoke_handler(tauri::generate_handler![
