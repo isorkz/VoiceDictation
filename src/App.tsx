@@ -44,6 +44,7 @@ function App() {
   const [config, setConfig] = useState<Config>(defaultConfig);
   const [apiKeyPresent, setApiKeyPresent] = useState<boolean | null>(null);
   const [status, setStatus] = useState<Status>({ state: "Idle", lastError: null });
+  const [autostartEnabled, setAutostartEnabled] = useState<boolean | null>(null);
   const [loading, setLoading] = useState(true);
   const [saving, setSaving] = useState(false);
   const [error, setError] = useState<string | null>(null);
@@ -64,6 +65,8 @@ function App() {
       setConfig(loadedConfig);
       setApiKeyPresent(keyStatus.present);
       setStatus(loadedStatus);
+      const enabled = await invoke<boolean>("get_autostart_enabled");
+      setAutostartEnabled(enabled);
     } catch (e) {
       setError(String(e));
     } finally {
@@ -126,6 +129,16 @@ function App() {
     }
   }
 
+  async function setAutostart(next: boolean) {
+    setError(null);
+    try {
+      await invoke("set_autostart_enabled", { enabled: next });
+      setAutostartEnabled(next);
+    } catch (e) {
+      setError(String(e));
+    }
+  }
+
   return (
     <main className="container">
       <h1>VoiceDictation</h1>
@@ -183,6 +196,17 @@ function App() {
           API key: <code>AZURE_OPENAI_API_KEY</code>{" "}
           {apiKeyPresent === null ? "(checking...)" : apiKeyPresent ? "(detected)" : "(not detected)"}
         </p>
+
+        <h2>Startup</h2>
+        <label style={{ display: "flex", gap: 8, alignItems: "center" }}>
+          <input
+            type="checkbox"
+            checked={autostartEnabled ?? false}
+            disabled={autostartEnabled === null || loading || saving}
+            onChange={(e) => void setAutostart(e.currentTarget.checked)}
+          />
+          Launch at login
+        </label>
 
         <h2>Hotkey</h2>
         <label>
