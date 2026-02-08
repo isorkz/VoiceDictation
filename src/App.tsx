@@ -1,5 +1,6 @@
 import { useEffect, useMemo, useState } from "react";
 import { invoke } from "@tauri-apps/api/core";
+import { listen } from "@tauri-apps/api/event";
 import "./App.css";
 
 type InsertPostfix = "none";
@@ -26,6 +27,11 @@ type Config = {
   };
 };
 
+type Status = {
+  state: string;
+  lastError?: string | null;
+};
+
 const defaultConfig: Config = {
   azure: { endpoint: "", deployment: "", apiVersion: "2025-03-01-preview" },
   hotkey: { windows: "Win+Shift+D" },
@@ -37,6 +43,7 @@ const defaultConfig: Config = {
 function App() {
   const [config, setConfig] = useState<Config>(defaultConfig);
   const [apiKeyPresent, setApiKeyPresent] = useState<boolean | null>(null);
+  const [status, setStatus] = useState<Status>({ state: "Idle", lastError: null });
   const [loading, setLoading] = useState(true);
   const [saving, setSaving] = useState(false);
   const [error, setError] = useState<string | null>(null);
@@ -49,12 +56,14 @@ function App() {
     setError(null);
     setTestResult(null);
     try {
-      const [loadedConfig, keyStatus] = await Promise.all([
+      const [loadedConfig, keyStatus, loadedStatus] = await Promise.all([
         invoke<Config>("get_config"),
         invoke<{ present: boolean }>("check_api_key"),
+        invoke<Status>("get_status"),
       ]);
       setConfig(loadedConfig);
       setApiKeyPresent(keyStatus.present);
+      setStatus(loadedStatus);
     } catch (e) {
       setError(String(e));
     } finally {
@@ -90,11 +99,42 @@ function App() {
     void reload();
   }, []);
 
+  useEffect(() => {
+    const unlistenStatus = listen<Status>("status_changed", (event) => {
+      setStatus(event.payload);
+    });
+    const unlistenTranscript = listen<string>("transcript_ready", (event) => {
+      setTestResult(event.payload);
+    });
+    const unlistenError = listen<string>("error", (event) => {
+      setError(event.payload);
+    });
+
+    return () => {
+      void unlistenStatus.then((f) => f());
+      void unlistenTranscript.then((f) => f());
+      void unlistenError.then((f) => f());
+    };
+  }, []);
+
+  async function toggleRecording() {
+    setError(null);
+    try {
+      await invoke("toggle_recording");
+    } catch (e) {
+      setError(String(e));
+    }
+  }
+
   return (
     <main className="container">
       <h1>VoiceDictation</h1>
 
       <p>Configuration (API key is read from env only).</p>
+      <p>
+        Status: <strong>{status.state}</strong>
+        {status.lastError ? <span style={{ color: "crimson" }}> ({status.lastError})</span> : null}
+      </p>
 
       {error ? <p style={{ color: "crimson" }}>{error}</p> : null}
 
@@ -222,6 +262,9 @@ function App() {
       </section>
 
       <div className="row" style={{ gap: 12 }}>
+        <button type="button" onClick={toggleRecording} disabled={loading || saving}>
+          {status.state === "Recording" ? "Stop" : "Start"}
+        </button>
         <button type="button" onClick={reload} disabled={loading || saving}>
           Reload
         </button>
