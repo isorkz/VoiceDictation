@@ -9,6 +9,7 @@ use serde::Serialize;
 use std::sync::Mutex;
 use tauri::Emitter;
 use tauri::Manager;
+use tauri_plugin_autostart::ManagerExt as _;
 
 #[derive(Serialize)]
 #[serde(rename_all = "camelCase")]
@@ -39,6 +40,20 @@ fn get_config(app: tauri::AppHandle) -> Result<config::Config, String> {
 #[tauri::command]
 fn set_config(app: tauri::AppHandle, config: config::Config) -> Result<(), String> {
     config::save(&app, &config)
+}
+
+#[tauri::command]
+fn get_autostart_enabled(app: tauri::AppHandle) -> Result<bool, String> {
+    app.autolaunch().is_enabled().map_err(|e| e.to_string())
+}
+
+#[tauri::command]
+fn set_autostart_enabled(app: tauri::AppHandle, enabled: bool) -> Result<(), String> {
+    if enabled {
+        app.autolaunch().enable().map_err(|e| e.to_string())
+    } else {
+        app.autolaunch().disable().map_err(|e| e.to_string())
+    }
 }
 
 #[tauri::command]
@@ -195,6 +210,10 @@ pub(crate) async fn stop_recording_impl(app: tauri::AppHandle) -> Result<(), Str
 pub fn run() {
     tauri::Builder::default()
         .manage(Mutex::new(app_state::RuntimeState::new()))
+        .plugin(tauri_plugin_autostart::init(
+            tauri_plugin_autostart::MacosLauncher::LaunchAgent,
+            None,
+        ))
         .plugin(tauri_plugin_opener::init())
         .setup(|app| {
             tray::setup(&app.handle())?;
@@ -205,6 +224,8 @@ pub fn run() {
             check_api_key,
             get_config,
             set_config,
+            get_autostart_enabled,
+            set_autostart_enabled,
             test_transcription,
             toggle_recording,
             stop_recording
