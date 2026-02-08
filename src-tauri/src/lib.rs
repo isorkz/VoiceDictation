@@ -7,6 +7,7 @@ mod app_state;
 use serde::Serialize;
 use std::sync::Mutex;
 use tauri::Emitter;
+use tauri::Manager;
 
 #[derive(Serialize)]
 #[serde(rename_all = "camelCase")]
@@ -75,8 +76,12 @@ async fn test_transcription(app: tauri::AppHandle) -> Result<String, String> {
 #[tauri::command]
 async fn toggle_recording(
     app: tauri::AppHandle,
-    state: tauri::State<'_, Mutex<app_state::RuntimeState>>,
 ) -> Result<(), String> {
+    toggle_recording_impl(app).await
+}
+
+async fn toggle_recording_impl(app: tauri::AppHandle) -> Result<(), String> {
+    let state = app.state::<Mutex<app_state::RuntimeState>>();
     let should_stop = {
         let s = state.lock().map_err(|_| "state mutex poisoned".to_string())?;
         if s.status.state == "Transcribing" || s.status.state == "Inserting" {
@@ -86,7 +91,7 @@ async fn toggle_recording(
     };
 
     if should_stop {
-        return stop_recording(app, state).await;
+        return stop_recording_impl(app).await;
     }
 
     let tmp = std::env::temp_dir().join(format!(
@@ -111,8 +116,11 @@ async fn toggle_recording(
 #[tauri::command]
 async fn stop_recording(
     app: tauri::AppHandle,
-    state: tauri::State<'_, Mutex<app_state::RuntimeState>>,
 ) -> Result<(), String> {
+    stop_recording_impl(app).await
+}
+
+async fn stop_recording_impl(app: tauri::AppHandle) -> Result<(), String> {
     if std::env::var("AZURE_OPENAI_API_KEY")
         .ok()
         .is_none_or(|value| value.trim().is_empty())
@@ -122,6 +130,7 @@ async fn stop_recording(
 
     let cfg = config::load_or_default(&app)?;
 
+    let state = app.state::<Mutex<app_state::RuntimeState>>();
     let (handle, _wav_path) = {
         let mut s = state.lock().map_err(|_| "state mutex poisoned".to_string())?;
         if s.status.state != "Recording" {
