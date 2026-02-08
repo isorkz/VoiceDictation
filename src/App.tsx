@@ -40,12 +40,14 @@ function App() {
   const [loading, setLoading] = useState(true);
   const [saving, setSaving] = useState(false);
   const [error, setError] = useState<string | null>(null);
+  const [testResult, setTestResult] = useState<string | null>(null);
 
   const canSave = useMemo(() => !loading && !saving, [loading, saving]);
 
   async function reload() {
     setLoading(true);
     setError(null);
+    setTestResult(null);
     try {
       const [loadedConfig, keyStatus] = await Promise.all([
         invoke<Config>("get_config"),
@@ -63,12 +65,24 @@ function App() {
   async function save() {
     setSaving(true);
     setError(null);
+    setTestResult(null);
     try {
       await invoke("set_config", { config });
     } catch (e) {
       setError(String(e));
     } finally {
       setSaving(false);
+    }
+  }
+
+  async function testTranscription() {
+    setError(null);
+    setTestResult(null);
+    try {
+      const text = await invoke<string>("test_transcription");
+      setTestResult(text);
+    } catch (e) {
+      setError(String(e));
     }
   }
 
@@ -214,7 +228,17 @@ function App() {
         <button type="button" onClick={save} disabled={!canSave}>
           Save
         </button>
+        <button type="button" onClick={testTranscription} disabled={loading || saving}>
+          Test transcription
+        </button>
       </div>
+
+      {testResult ? (
+        <section style={{ textAlign: "left", width: "min(860px, 100%)", marginTop: 16 }}>
+          <h2>Transcript</h2>
+          <pre style={{ whiteSpace: "pre-wrap" }}>{testResult}</pre>
+        </section>
+      ) : null}
     </main>
   );
 }
