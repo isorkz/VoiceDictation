@@ -3,6 +3,7 @@ mod audio;
 mod azure_transcribe;
 mod insert;
 mod app_state;
+mod tray;
 
 use serde::Serialize;
 use std::sync::Mutex;
@@ -80,7 +81,7 @@ async fn toggle_recording(
     toggle_recording_impl(app).await
 }
 
-async fn toggle_recording_impl(app: tauri::AppHandle) -> Result<(), String> {
+pub(crate) async fn toggle_recording_impl(app: tauri::AppHandle) -> Result<(), String> {
     let state = app.state::<Mutex<app_state::RuntimeState>>();
     let should_stop = {
         let s = state.lock().map_err(|_| "state mutex poisoned".to_string())?;
@@ -120,7 +121,7 @@ async fn stop_recording(
     stop_recording_impl(app).await
 }
 
-async fn stop_recording_impl(app: tauri::AppHandle) -> Result<(), String> {
+pub(crate) async fn stop_recording_impl(app: tauri::AppHandle) -> Result<(), String> {
     if std::env::var("AZURE_OPENAI_API_KEY")
         .ok()
         .is_none_or(|value| value.trim().is_empty())
@@ -195,6 +196,10 @@ pub fn run() {
     tauri::Builder::default()
         .manage(Mutex::new(app_state::RuntimeState::new()))
         .plugin(tauri_plugin_opener::init())
+        .setup(|app| {
+            tray::setup(&app.handle())?;
+            Ok(())
+        })
         .invoke_handler(tauri::generate_handler![
             get_status,
             check_api_key,
