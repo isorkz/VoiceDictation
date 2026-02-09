@@ -5344,6 +5344,7 @@ name = "voice-dictation"
 version = "0.1.0"
 dependencies = [
  "arboard",
+ "core-foundation",
  "core-graphics",
  "cpal",
  "crossbeam-channel",
