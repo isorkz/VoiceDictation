@@ -11,6 +11,7 @@ use std::sync::Mutex;
 use tauri::Emitter;
 use tauri::Manager;
 use tauri_plugin_autostart::ManagerExt as _;
+use std::time::Duration;
 
 #[derive(Serialize)]
 #[serde(rename_all = "camelCase")]
@@ -111,6 +112,9 @@ pub(crate) async fn toggle_recording_impl(app: tauri::AppHandle) -> Result<(), S
         return stop_recording_impl(app).await;
     }
 
+    let cfg = config::load_or_default(&app)?;
+    let max_seconds = cfg.recording.max_seconds.max(1);
+
     let tmp = std::env::temp_dir().join(format!(
         "voicedictation-{}.wav",
         std::time::SystemTime::now()
@@ -125,8 +129,24 @@ pub(crate) async fn toggle_recording_impl(app: tauri::AppHandle) -> Result<(), S
     s.recording_path = Some(tmp);
     s.status.state = "Recording".to_string();
     s.status.last_error = None;
+    s.recording_token = s.recording_token.wrapping_add(1);
+    let token = s.recording_token;
 
     let _ = app.emit("status_changed", &s.status);
+
+    let app2 = app.clone();
+    tauri::async_runtime::spawn_blocking(move || {
+        std::thread::sleep(Duration::from_secs(max_seconds));
+        let state = app2.state::<Mutex<app_state::RuntimeState>>();
+        let should_stop = state
+            .lock()
+            .ok()
+            .is_some_and(|s| s.status.state == "Recording" && s.recording_token == token);
+        if should_stop {
+            let _ = tauri::async_runtime::block_on(stop_recording_impl(app2));
+        }
+    });
+
     Ok(())
 }
 

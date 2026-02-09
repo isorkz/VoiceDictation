@@ -13,6 +13,7 @@ pub struct RuntimeState {
     pub status: Status,
     pub recording: Option<audio::RecordingHandle>,
     pub recording_path: Option<PathBuf>,
+    pub recording_token: u64,
 }
 
 impl RuntimeState {
@@ -24,7 +25,7 @@ impl RuntimeState {
             },
             recording: None,
             recording_path: None,
+            recording_token: 0,
         }
     }
 }
-
