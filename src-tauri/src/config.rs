@@ -144,6 +144,10 @@ fn ensure_dir(path: &Path) -> Result<(), String> {
 fn atomic_write(path: &Path, bytes: &[u8]) -> std::io::Result<()> {
     let tmp_path = path.with_extension("json.tmp");
     fs::write(&tmp_path, bytes)?;
+    #[cfg(windows)]
+    {
+        let _ = fs::remove_file(path);
+    }
     fs::rename(tmp_path, path)?;
     Ok(())
 }
