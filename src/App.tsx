@@ -157,12 +157,13 @@ function App() {
           Endpoint
           <input
             value={config.azure.endpoint}
-            onChange={(e) =>
+            onChange={(e) => {
+              const value = e.currentTarget.value;
               setConfig((prev) => ({
                 ...prev,
-                azure: { ...prev.azure, endpoint: e.currentTarget.value },
-              }))
-            }
+                azure: { ...prev.azure, endpoint: value },
+              }));
+            }}
             placeholder="https://<resource>.openai.azure.com"
           />
         </label>
@@ -170,12 +171,13 @@ function App() {
           Deployment
           <input
             value={config.azure.deployment}
-            onChange={(e) =>
+            onChange={(e) => {
+              const value = e.currentTarget.value;
               setConfig((prev) => ({
                 ...prev,
-                azure: { ...prev.azure, deployment: e.currentTarget.value },
-              }))
-            }
+                azure: { ...prev.azure, deployment: value },
+              }));
+            }}
             placeholder="gpt-4o-mini-transcribe (deployment name)"
           />
         </label>
@@ -183,12 +185,13 @@ function App() {
           API version
           <input
             value={config.azure.apiVersion}
-            onChange={(e) =>
+            onChange={(e) => {
+              const value = e.currentTarget.value;
               setConfig((prev) => ({
                 ...prev,
-                azure: { ...prev.azure, apiVersion: e.currentTarget.value },
-              }))
-            }
+                azure: { ...prev.azure, apiVersion: value },
+              }));
+            }}
             placeholder="2025-03-01-preview"
           />
         </label>
@@ -203,7 +206,10 @@ function App() {
             type="checkbox"
             checked={autostartEnabled ?? false}
             disabled={autostartEnabled === null || loading || saving}
-            onChange={(e) => void setAutostart(e.currentTarget.checked)}
+            onChange={(e) => {
+              const checked = e.currentTarget.checked;
+              void setAutostart(checked);
+            }}
           />
           Launch at login
         </label>
@@ -213,12 +219,13 @@ function App() {
           Windows default hotkey
           <input
             value={config.hotkey.windows}
-            onChange={(e) =>
+            onChange={(e) => {
+              const value = e.currentTarget.value;
               setConfig((prev) => ({
                 ...prev,
-                hotkey: { ...prev.hotkey, windows: e.currentTarget.value },
-              }))
-            }
+                hotkey: { ...prev.hotkey, windows: value },
+              }));
+            }}
             placeholder="Win+Shift+D"
           />
         </label>
@@ -230,12 +237,13 @@ function App() {
             type="number"
             value={config.thresholds.holdMs}
             min={0}
-            onChange={(e) =>
+            onChange={(e) => {
+              const value = e.currentTarget.value;
               setConfig((prev) => ({
                 ...prev,
-                thresholds: { ...prev.thresholds, holdMs: Number(e.currentTarget.value) },
-              }))
-            }
+                thresholds: { ...prev.thresholds, holdMs: Number(value) },
+              }));
+            }}
           />
         </label>
         <label>
@@ -244,12 +252,13 @@ function App() {
             type="number"
             value={config.thresholds.doubleClickMs}
             min={0}
-            onChange={(e) =>
+            onChange={(e) => {
+              const value = e.currentTarget.value;
               setConfig((prev) => ({
                 ...prev,
-                thresholds: { ...prev.thresholds, doubleClickMs: Number(e.currentTarget.value) },
-              }))
-            }
+                thresholds: { ...prev.thresholds, doubleClickMs: Number(value) },
+              }));
+            }}
           />
         </label>
 
@@ -260,12 +269,13 @@ function App() {
             type="number"
             value={config.recording.maxSeconds}
             min={1}
-            onChange={(e) =>
+            onChange={(e) => {
+              const value = e.currentTarget.value;
               setConfig((prev) => ({
                 ...prev,
-                recording: { ...prev.recording, maxSeconds: Number(e.currentTarget.value) },
-              }))
-            }
+                recording: { ...prev.recording, maxSeconds: Number(value) },
+              }));
+            }}
           />
         </label>
 
@@ -274,12 +284,13 @@ function App() {
           <input
             type="checkbox"
             checked={config.insert.restoreClipboard}
-            onChange={(e) =>
+            onChange={(e) => {
+              const checked = e.currentTarget.checked;
               setConfig((prev) => ({
                 ...prev,
-                insert: { ...prev.insert, restoreClipboard: e.currentTarget.checked },
-              }))
-            }
+                insert: { ...prev.insert, restoreClipboard: checked },
+              }));
+            }}
           />
           Restore clipboard after paste
         </label>
