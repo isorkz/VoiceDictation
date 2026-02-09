@@ -264,6 +264,12 @@ pub fn run() {
             None,
         ))
         .plugin(tauri_plugin_opener::init())
+        .on_window_event(|window, event| {
+            if let tauri::WindowEvent::CloseRequested { api, .. } = event {
+                api.prevent_close();
+                let _ = window.hide();
+            }
+        })
         .setup(|app| {
             tray::setup(&app.handle())?;
             key_listener::init(&app.handle()).map_err(|e| {
