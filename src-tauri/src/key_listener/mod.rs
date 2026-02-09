@@ -1,16 +1,22 @@
 use tauri::AppHandle;
 
+#[cfg(target_os = "macos")]
+pub fn init(app: &AppHandle) -> Result<(), String> {
+    macos::init(app)
+}
+
+#[cfg(windows)]
+pub fn init(app: &AppHandle) -> Result<(), String> {
+    windows::init(app)
+}
+
+#[cfg(not(any(windows, target_os = "macos")))]
 pub fn init(_app: &AppHandle) -> Result<(), String> {
-    #[cfg(windows)]
-    {
-        return windows::init(_app);
-    }
-    #[cfg(not(windows))]
-    {
-        return Ok(());
-    }
+    Ok(())
 }
 
 #[cfg(windows)]
 mod windows;
 
+#[cfg(target_os = "macos")]
+mod macos;
