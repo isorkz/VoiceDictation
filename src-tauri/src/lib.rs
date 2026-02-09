@@ -158,13 +158,6 @@ async fn stop_recording(
 }
 
 pub(crate) async fn stop_recording_impl(app: tauri::AppHandle) -> Result<(), String> {
-    if std::env::var("AZURE_OPENAI_API_KEY")
-        .ok()
-        .is_none_or(|value| value.trim().is_empty())
-    {
-        return Err("AZURE_OPENAI_API_KEY is not set".to_string());
-    }
-
     let cfg = config::load_or_default(&app)?;
 
     let state = app.state::<Mutex<app_state::RuntimeState>>();
@@ -187,11 +180,47 @@ pub(crate) async fn stop_recording_impl(app: tauri::AppHandle) -> Result<(), Str
         (handle, wav_path)
     };
 
-    let wav_path = tauri::async_runtime::spawn_blocking(move || handle.stop())
+    let wav_path = match tauri::async_runtime::spawn_blocking(move || handle.stop())
         .await
-        .map_err(|e| format!("recording stop task failed: {e}"))??;
+        .map_err(|e| format!("recording stop task failed: {e}"))?
+    {
+        Ok(path) => path,
+        Err(e) => {
+            let mut s = state.lock().map_err(|_| "state mutex poisoned".to_string())?;
+            s.status.state = "Idle".to_string();
+            s.status.last_error = Some(e.clone());
+            let _ = app.emit("error", &e);
+            let _ = app.emit("status_changed", &s.status);
+            return Err(e);
+        }
+    };
 
-    let text = azure_transcribe::transcribe_wav(&wav_path, &cfg).await?;
+    let api_key_missing = std::env::var("AZURE_OPENAI_API_KEY")
+        .ok()
+        .is_none_or(|value| value.trim().is_empty());
+    if api_key_missing {
+        let _ = std::fs::remove_file(&wav_path);
+        let e = "AZURE_OPENAI_API_KEY is not set".to_string();
+        let mut s = state.lock().map_err(|_| "state mutex poisoned".to_string())?;
+        s.status.state = "Idle".to_string();
+        s.status.last_error = Some(e.clone());
+        let _ = app.emit("error", &e);
+        let _ = app.emit("status_changed", &s.status);
+        return Err(e);
+    }
+
+    let text = match azure_transcribe::transcribe_wav(&wav_path, &cfg).await {
+        Ok(t) => t,
+        Err(e) => {
+            let _ = std::fs::remove_file(&wav_path);
+            let mut s = state.lock().map_err(|_| "state mutex poisoned".to_string())?;
+            s.status.state = "Idle".to_string();
+            s.status.last_error = Some(e.clone());
+            let _ = app.emit("error", &e);
+            let _ = app.emit("status_changed", &s.status);
+            return Err(e);
+        }
+    };
 
     {
         let mut s = state.lock().map_err(|_| "state mutex poisoned".to_string())?;
@@ -201,13 +230,12 @@ pub(crate) async fn stop_recording_impl(app: tauri::AppHandle) -> Result<(), Str
 
     let restore = cfg.insert.restore_clipboard;
     let text2 = text.clone();
-    let insert_result = tauri::async_runtime::spawn_blocking(move || {
-        insert::clipboard_paste_restore(&text2, restore)
-    })
-    .await
-    .map_err(|e| format!("insert task failed: {e}"))?;
+    let insert_result = tauri::async_runtime::spawn_blocking(move || insert::clipboard_paste_restore(&text2, restore))
+        .await
+        .map_err(|e| format!("insert task failed: {e}"))?;
 
     if let Err(e) = insert_result {
+        let _ = std::fs::remove_file(&wav_path);
         let mut s = state.lock().map_err(|_| "state mutex poisoned".to_string())?;
         s.status.state = "Idle".to_string();
         s.status.last_error = Some(e.clone());
