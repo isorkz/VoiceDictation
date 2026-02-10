@@ -19,6 +19,11 @@ struct ApiKeyStatus {
     present: bool,
 }
 
+fn emit_status(app: &tauri::AppHandle, status: &app_state::Status) {
+    let _ = app.emit("status_changed", status);
+    let _ = tray::update_for_status(app, status);
+}
+
 #[tauri::command]
 fn get_status(state: tauri::State<'_, Mutex<app_state::RuntimeState>>) -> app_state::Status {
     let state = state.lock().expect("state mutex poisoned");
@@ -132,7 +137,9 @@ pub(crate) async fn toggle_recording_impl(app: tauri::AppHandle) -> Result<(), S
     s.recording_token = s.recording_token.wrapping_add(1);
     let token = s.recording_token;
 
-    let _ = app.emit("status_changed", &s.status);
+    let status = s.status.clone();
+    drop(s);
+    emit_status(&app, &status);
 
     let app2 = app.clone();
     tauri::async_runtime::spawn_blocking(move || {
@@ -161,13 +168,13 @@ pub(crate) async fn stop_recording_impl(app: tauri::AppHandle) -> Result<(), Str
     let cfg = config::load_or_default(&app)?;
 
     let state = app.state::<Mutex<app_state::RuntimeState>>();
-    let (handle, _wav_path) = {
+    let (handle, _wav_path, transcribing_status) = {
         let mut s = state.lock().map_err(|_| "state mutex poisoned".to_string())?;
         if s.status.state != "Recording" {
             return Err("Not recording".to_string());
         }
         s.status.state = "Transcribing".to_string();
-        let _ = app.emit("status_changed", &s.status);
+        let status = s.status.clone();
 
         let handle = s
             .recording
@@ -177,8 +184,9 @@ pub(crate) async fn stop_recording_impl(app: tauri::AppHandle) -> Result<(), Str
             .recording_path
             .take()
             .ok_or_else(|| "recording path missing".to_string())?;
-        (handle, wav_path)
+        (handle, wav_path, status)
     };
+    emit_status(&app, &transcribing_status);
 
     let wav_path = match tauri::async_runtime::spawn_blocking(move || handle.stop())
         .await
@@ -189,8 +197,10 @@ pub(crate) async fn stop_recording_impl(app: tauri::AppHandle) -> Result<(), Str
             let mut s = state.lock().map_err(|_| "state mutex poisoned".to_string())?;
             s.status.state = "Idle".to_string();
             s.status.last_error = Some(e.clone());
+            let status = s.status.clone();
+            drop(s);
             let _ = app.emit("error", &e);
-            let _ = app.emit("status_changed", &s.status);
+            emit_status(&app, &status);
             return Err(e);
         }
     };
@@ -204,8 +214,10 @@ pub(crate) async fn stop_recording_impl(app: tauri::AppHandle) -> Result<(), Str
         let mut s = state.lock().map_err(|_| "state mutex poisoned".to_string())?;
         s.status.state = "Idle".to_string();
         s.status.last_error = Some(e.clone());
+        let status = s.status.clone();
+        drop(s);
         let _ = app.emit("error", &e);
-        let _ = app.emit("status_changed", &s.status);
+        emit_status(&app, &status);
         return Err(e);
     }
 
@@ -216,17 +228,20 @@ pub(crate) async fn stop_recording_impl(app: tauri::AppHandle) -> Result<(), Str
             let mut s = state.lock().map_err(|_| "state mutex poisoned".to_string())?;
             s.status.state = "Idle".to_string();
             s.status.last_error = Some(e.clone());
+            let status = s.status.clone();
+            drop(s);
             let _ = app.emit("error", &e);
-            let _ = app.emit("status_changed", &s.status);
+            emit_status(&app, &status);
             return Err(e);
         }
     };
 
-    {
+    let inserting_status = {
         let mut s = state.lock().map_err(|_| "state mutex poisoned".to_string())?;
         s.status.state = "Inserting".to_string();
-        let _ = app.emit("status_changed", &s.status);
-    }
+        s.status.clone()
+    };
+    emit_status(&app, &inserting_status);
 
     let restore = cfg.insert.restore_clipboard;
     let text2 = text.clone();
@@ -239,8 +254,10 @@ pub(crate) async fn stop_recording_impl(app: tauri::AppHandle) -> Result<(), Str
         let mut s = state.lock().map_err(|_| "state mutex poisoned".to_string())?;
         s.status.state = "Idle".to_string();
         s.status.last_error = Some(e.clone());
+        let status = s.status.clone();
+        drop(s);
         let _ = app.emit("error", &e);
-        let _ = app.emit("status_changed", &s.status);
+        emit_status(&app, &status);
         return Err(e);
     }
 
@@ -249,8 +266,10 @@ pub(crate) async fn stop_recording_impl(app: tauri::AppHandle) -> Result<(), Str
     let mut s = state.lock().map_err(|_| "state mutex poisoned".to_string())?;
     s.status.state = "Idle".to_string();
     s.status.last_error = None;
+    let status = s.status.clone();
     let _ = app.emit("transcript_ready", text.clone());
-    let _ = app.emit("status_changed", &s.status);
+    drop(s);
+    emit_status(&app, &status);
 
     Ok(())
 }
