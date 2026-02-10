@@ -2,10 +2,9 @@ use crate::toggle_recording_impl;
 use crate::app_state::Status;
 use resvg::{tiny_skia, usvg};
 use std::sync::OnceLock;
-use tauri::menu::{CheckMenuItemBuilder, Menu, MenuItemBuilder};
+use tauri::menu::{Menu, MenuItemBuilder};
 use tauri::tray::TrayIconBuilder;
-use tauri::{AppHandle, Emitter, Manager};
-use tauri_plugin_autostart::ManagerExt as _;
+use tauri::{AppHandle, Manager};
 
 const TRAY_ID: &str = "main";
 const ICON_SIZE: u32 = 32;
@@ -129,13 +128,9 @@ pub fn setup(app: &AppHandle) -> tauri::Result<()> {
     let toggle = MenuItemBuilder::with_id(TOGGLE_MENU_ID, "Start").build(app)?;
     let _ = TOGGLE_ITEM.set(toggle.clone());
     let settings = MenuItemBuilder::with_id("settings", "Settings").build(app)?;
-    let autostart_enabled = app.autolaunch().is_enabled().unwrap_or(false);
-    let autostart = CheckMenuItemBuilder::with_id("autostart", "Launch at login")
-        .checked(autostart_enabled)
-        .build(app)?;
     let quit = MenuItemBuilder::with_id("quit", "Quit").build(app)?;
 
-    let menu = Menu::with_items(app, &[&toggle, &settings, &autostart, &quit])?;
+    let menu = Menu::with_items(app, &[&toggle, &settings, &quit])?;
 
     let icon = icons()?.idle.clone();
 
@@ -154,18 +149,6 @@ pub fn setup(app: &AppHandle) -> tauri::Result<()> {
                 if let Some(window) = app.get_webview_window("main") {
                     let _ = window.show();
                     let _ = window.set_focus();
-                }
-            }
-            "autostart" => {
-                let checked = autostart.is_checked().unwrap_or(false);
-                let result = if checked {
-                    app.autolaunch().enable()
-                } else {
-                    app.autolaunch().disable()
-                };
-                if let Err(e) = result {
-                    let _ = autostart.set_checked(!checked);
-                    let _ = app.emit("error", e.to_string());
                 }
             }
             "quit" => {

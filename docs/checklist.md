@@ -21,7 +21,7 @@
 - 安全阈值：录音超过 `maxSeconds` 自动停止并进入转写流程。
 
 ### 托盘与自启动
-- Tray menu：Start/Stop、Settings、Launch at login、Quit（Rust：`src-tauri/src/tray.rs`）。
+- Tray menu：Start/Stop、Settings、Quit（Rust：`src-tauri/src/tray.rs`）。
 - 启动时主窗口默认不显示；从托盘菜单 “Settings” 打开；关闭窗口会隐藏到托盘继续运行。
 - 托盘图标会随状态变化（Idle/Recording/Transcribing/Inserting/Error）。
 - Autostart：集成 `tauri-plugin-autostart`，支持托盘与 UI 开关。
