@@ -1,5 +1,7 @@
 # VoiceDictation（macOS/Windows）语音转文字工具（Tauri + React(TypeScript) + Azure OpenAI）
 
+> 说明：本项目计划以 `docs/plan.md` 为准；根目录 `plan.md` 仅作为历史草稿参考。
+
 ## Summary（目标与成功标准）
 - 做一个常驻托盘的小工具：按住（push-to-talk）或双击（toggle）触发录音 → 调用 Azure OpenAI `gpt-4o-mini-transcribe` 转写 → 将文本写入“当前光标所在编辑区”。
 - **macOS**：Language(Globe/Fn) 键支持「按住说话、松开转写并粘贴」+「双击开/关持续录音」。
@@ -8,8 +10,8 @@
 - V2（后续）再加：Direct insertion（辅助功能/UIA 直接写入，不动剪贴板）。
 
 ## 当前仓库现状
-- `/Users/intzero/Work/PlayforFun/codex/VoiceDictation` 目前是空目录且不是 git repo。
-- 采用官方脚手架初始化（会一次性生成较多文件），后续改动按“小步提交/小范围改动”推进。
+- V1 功能基本可用（配置、托盘、自启动、录音→转写→粘贴、状态机、基础测试等），详见 `docs/checklist.md`。
+- 当前改动目标：优化 Settings 页面 UI（布局与视觉层级），不改变现有功能行为。
 
 ## Tech Stack（已定）
 - App：Tauri v2（Rust 后端）+ React（前端设置页）
@@ -98,6 +100,10 @@ Config（存储为 JSON）字段（全部在 UI 可编辑）：
   - Open Settings
   - Launch at login（开关）
   - Quit
+- Settings UI（layout refresh, Tailwind）：
+  - 目标：卡片化分区 + 响应式栅格 + 清晰的状态/错误展示 + 统一按钮层级（现代简洁风）。
+  - 边界：仅做 UI/布局/交互观感优化，不改变保存/调用后端等业务行为与字段含义。
+  - 约束：继续保持表单的可访问性（`label`/`htmlFor`/`aria-*`），并同步更新现有前端测试。
 - Settings page：
   - Azure：endpoint / apiKey / deployment / apiVersion / Test
   - Hotkeys：Windows 默认热键可编辑（mac 仅显示 Language 键说明 + 提示系统设置建议）
@@ -176,4 +182,3 @@ Config（存储为 JSON）字段（全部在 UI 可编辑）：
 - 默认阈值：hold 180ms；double-click 300ms；max recording 120s。
 - Windows 默认热键：`Win+Shift+D`。
 - Azure key 通过环境变量读取；文档提示风险与建议。
-

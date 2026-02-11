@@ -46,6 +46,9 @@ describe("App", () => {
     mockInvoke();
     render(<App />);
 
+    const autostart = screen.getByLabelText(/Launch at login/i);
+    await waitFor(() => expect(autostart).not.toBeDisabled());
+
     const endpoint = screen.getByLabelText(/Endpoint/i);
     fireEvent.change(endpoint, { target: { value: "https://example.openai.azure.com" } });
     expect(endpoint).toHaveValue("https://example.openai.azure.com");
@@ -63,8 +66,6 @@ describe("App", () => {
     fireEvent.click(restore);
     expect(restore).toBeChecked();
 
-    const autostart = screen.getByLabelText(/Launch at login/i);
-    await waitFor(() => expect(autostart).not.toBeDisabled());
     fireEvent.click(autostart);
 
     await waitFor(() =>
