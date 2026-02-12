@@ -146,6 +146,8 @@ function App() {
   const [saving, setSaving] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [testResult, setTestResult] = useState<string | null>(null);
+  const [lastTestedAt, setLastTestedAt] = useState<Date | null>(null);
+  const [lastTestDurationMs, setLastTestDurationMs] = useState<number | null>(null);
 
   const canSave = useMemo(() => !loading && !saving, [loading, saving]);
   const isBusy = loading || saving;
@@ -154,6 +156,8 @@ function App() {
     setLoading(true);
     setError(null);
     setTestResult(null);
+    setLastTestedAt(null);
+    setLastTestDurationMs(null);
     try {
       const [loadedConfig, keyStatus, loadedStatus] = await Promise.all([
         invoke<Config>("get_config"),
@@ -176,6 +180,8 @@ function App() {
     setSaving(true);
     setError(null);
     setTestResult(null);
+    setLastTestedAt(null);
+    setLastTestDurationMs(null);
     try {
       await invoke("set_config", { config });
     } catch (e) {
@@ -186,6 +192,7 @@ function App() {
   }
 
   async function testTranscription() {
+    const startedAt = Date.now();
     setError(null);
     setTestResult(null);
     try {
@@ -193,6 +200,9 @@ function App() {
       setTestResult(text);
     } catch (e) {
       setError(String(e));
+    } finally {
+      setLastTestedAt(new Date());
+      setLastTestDurationMs(Date.now() - startedAt);
     }
   }
 
@@ -356,21 +366,34 @@ function App() {
           </Card>
 
           <Card title="Hotkey" description="Windows default hotkey (takes effect after restart).">
-            <label>
-              <span className="text-sm font-medium text-slate-800 dark:text-slate-200">
-                Windows default hotkey
-              </span>
-              <Input
-                value={config.hotkey.windows}
-                onChange={(value) => {
-                  setConfig((prev) => ({
-                    ...prev,
-                    hotkey: { ...prev.hotkey, windows: value },
-                  }));
-                }}
-                placeholder="Win+Shift+D"
-              />
-            </label>
+            <div className="space-y-4">
+              <label className="block">
+                <span className="text-sm font-medium text-slate-800 dark:text-slate-200">
+                  Windows default hotkey
+                </span>
+                <Input
+                  value={config.hotkey.windows}
+                  onChange={(value) => {
+                    setConfig((prev) => ({
+                      ...prev,
+                      hotkey: { ...prev.hotkey, windows: value },
+                    }));
+                  }}
+                  placeholder="Win+Shift+D"
+                />
+              </label>
+
+              <div className="rounded-xl border border-slate-200 bg-slate-50 p-3 text-sm text-slate-700 dark:border-slate-800 dark:bg-slate-950 dark:text-slate-200">
+                <div className="font-medium text-slate-800 dark:text-slate-200">macOS shortcut</div>
+                <div className="mt-1">
+                  Use <code className="rounded bg-white px-1.5 py-0.5 dark:bg-slate-900">Language (Globe/Fn)</code>{" "}
+                  key:
+                  <span className="ml-2 text-slate-600 dark:text-slate-300">
+                    hold = push-to-talk, double-click = toggle.
+                  </span>
+                </div>
+              </div>
+            </div>
           </Card>
 
           <Card title="Thresholds" description="Tune hold and double-click timings.">
@@ -458,20 +481,29 @@ function App() {
               {status.state === "Recording" ? "Stop" : "Start"}
             </Button>
             <Button onClick={() => void reload()} disabled={isBusy}>
-              Reload
+              Refresh
             </Button>
             <Button onClick={() => void save()} disabled={!canSave} variant="primary">
               Save
             </Button>
             <Button onClick={() => void testTranscription()} disabled={isBusy}>
-              Test transcription
+              Test connection
             </Button>
           </div>
         </div>
 
         {testResult ? (
           <div className="mt-6">
-            <Card title="Transcript">
+            <Card
+              title="Transcript"
+              description={
+                lastTestedAt
+                  ? `Tested at ${lastTestedAt.toLocaleString()}${
+                      lastTestDurationMs !== null ? ` (${lastTestDurationMs}ms)` : ""
+                    }`
+                  : undefined
+              }
+            >
               <pre className="whitespace-pre-wrap rounded-xl border border-slate-200 bg-slate-50 p-3 text-sm text-slate-900 dark:border-slate-800 dark:bg-slate-950 dark:text-slate-50">
                 {testResult}
               </pre>
