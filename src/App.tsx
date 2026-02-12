@@ -218,15 +218,6 @@ function App() {
     };
   }, []);
 
-  async function toggleRecording() {
-    setError(null);
-    try {
-      await invoke("toggle_recording");
-    } catch (e) {
-      setError(String(e));
-    }
-  }
-
   async function setAutostart(next: boolean) {
     setError(null);
     try {
@@ -463,18 +454,11 @@ function App() {
 
         <div className="sticky bottom-0 mt-8 border-t border-slate-200/80 bg-slate-50/80 py-4 backdrop-blur dark:border-slate-800/80 dark:bg-slate-950/70">
           <div className="mx-auto flex w-full max-w-5xl flex-wrap gap-2 px-0">
-            <Button
-              onClick={() => void toggleRecording()}
-              disabled={isBusy}
-              variant={status.state === "Recording" ? "danger" : "primary"}
-            >
-              {status.state === "Recording" ? "Stop" : "Start"}
+            <Button onClick={() => void save()} disabled={!canSave} variant="primary">
+              Save
             </Button>
             <Button onClick={() => void reload()} disabled={isBusy}>
               Reset settings
-            </Button>
-            <Button onClick={() => void save()} disabled={!canSave} variant="primary">
-              Save
             </Button>
             <Button onClick={() => void testTranscription()} disabled={isBusy}>
               Test connection (3s)
