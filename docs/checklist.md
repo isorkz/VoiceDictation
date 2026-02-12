@@ -59,7 +59,7 @@
 
 ### 2) Test transcription（端到端）
 - 点击 “Test transcription”：
-  - 录音约 1.2 秒
+  - 录音约 3 秒
   - 返回转写文本并显示在页面 “Transcript”
   - 失败时能显示可读错误（401/404/空配置/缺 key）
 

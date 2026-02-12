@@ -477,7 +477,7 @@ function App() {
               Save
             </Button>
             <Button onClick={() => void testTranscription()} disabled={isBusy}>
-              Test connection (1.2s)
+              Test connection (3s)
             </Button>
           </div>
         </div>

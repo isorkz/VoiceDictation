@@ -84,7 +84,7 @@ async fn test_transcription(app: tauri::AppHandle) -> Result<String, String> {
         ));
 
         let handle = audio::start_recording(tmp.clone())?;
-        std::thread::sleep(std::time::Duration::from_millis(1200));
+        std::thread::sleep(std::time::Duration::from_millis(3000));
         let path = handle.stop()?;
         Ok::<_, String>(path)
     })
