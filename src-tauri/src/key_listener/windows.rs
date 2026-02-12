@@ -132,11 +132,12 @@ unsafe extern "system" fn hook_proc(code: i32, wparam: WPARAM, lparam: LPARAM) -
     if vk == hotkey.key_vk {
         if is_down && !st.pressed_key {
             st.pressed_key = true;
-            st.key_down_at = Some(Instant::now());
+            let pressed_at = Instant::now();
+            st.key_down_at = Some(pressed_at);
             st.hold_fired = false;
 
             if modifiers_match(&hotkey, &st) {
-                spawn_hold_timer(thresholds.hold_ms);
+                spawn_hold_timer(thresholds.hold_ms, pressed_at);
             }
         } else if !is_down && st.pressed_key {
             st.pressed_key = false;
@@ -186,14 +187,14 @@ fn modifiers_match(hk: &Hotkey, st: &State) -> bool {
         && (!hk.alt || st.pressed_alt)
 }
 
-fn spawn_hold_timer(hold_ms: u64) {
+fn spawn_hold_timer(hold_ms: u64, pressed_at: Instant) {
     std::thread::spawn(move || {
         std::thread::sleep(Duration::from_millis(hold_ms));
         let mut st = match STATE.get().and_then(|m| m.lock().ok()) {
             Some(v) => v,
             None => return,
         };
-        if st.pressed_key && !st.hold_fired {
+        if st.pressed_key && !st.hold_fired && st.key_down_at == Some(pressed_at) {
             st.hold_fired = true;
             drop(st);
             if let Some(app) = APP.get() {

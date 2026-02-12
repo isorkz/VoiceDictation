@@ -90,6 +90,7 @@ fn handle_event(
         st.hold_fired = false;
 
         let app2 = app.clone();
+        let down_at = now;
         let shared2 = Arc::clone(shared);
         std::thread::spawn(move || {
             std::thread::sleep(Duration::from_millis(hold_ms));
@@ -97,7 +98,7 @@ fn handle_event(
                 Ok(v) => v,
                 Err(_) => return,
             };
-            if st.down && !st.hold_fired {
+            if st.down && !st.hold_fired && st.down_at == Some(down_at) {
                 st.hold_fired = true;
                 drop(st);
                 tauri::async_runtime::spawn(async move {
