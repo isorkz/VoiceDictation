@@ -5,6 +5,7 @@ mod insert;
 mod app_state;
 mod tray;
 mod key_listener;
+mod logger;
 
 use serde::Serialize;
 use std::sync::Mutex;
@@ -22,6 +23,11 @@ struct ApiKeyStatus {
 fn emit_status(app: &tauri::AppHandle, status: &app_state::Status) {
     let _ = app.emit("status_changed", status);
     let _ = tray::update_for_status(app, status);
+}
+
+fn report_error(app: &tauri::AppHandle, context: &str, message: &str) {
+    let _ = logger::append_error(app, context, message);
+    let _ = app.emit("error", message);
 }
 
 #[cfg(target_os = "macos")]
@@ -105,25 +111,44 @@ fn check_api_key() -> ApiKeyStatus {
 
 #[tauri::command]
 fn get_config(app: tauri::AppHandle) -> Result<config::Config, String> {
-    config::load_or_default(&app)
+    config::load_or_default(&app).inspect_err(|e| {
+        let _ = logger::append_error(&app, "get_config", e);
+    })
 }
 
 #[tauri::command]
 fn set_config(app: tauri::AppHandle, config: config::Config) -> Result<(), String> {
-    config::save(&app, &config)
+    config::save(&app, &config).inspect_err(|e| {
+        let _ = logger::append_error(&app, "set_config", e);
+    })
 }
 
 #[tauri::command]
 fn get_autostart_enabled(app: tauri::AppHandle) -> Result<bool, String> {
-    app.autolaunch().is_enabled().map_err(|e| e.to_string())
+    app.autolaunch()
+        .is_enabled()
+        .map_err(|e| e.to_string())
+        .inspect_err(|e| {
+            let _ = logger::append_error(&app, "get_autostart_enabled", e);
+        })
 }
 
 #[tauri::command]
 fn set_autostart_enabled(app: tauri::AppHandle, enabled: bool) -> Result<(), String> {
     if enabled {
-        app.autolaunch().enable().map_err(|e| e.to_string())
+        app.autolaunch()
+            .enable()
+            .map_err(|e| e.to_string())
+            .inspect_err(|e| {
+                let _ = logger::append_error(&app, "set_autostart_enabled", e);
+            })
     } else {
-        app.autolaunch().disable().map_err(|e| e.to_string())
+        app.autolaunch()
+            .disable()
+            .map_err(|e| e.to_string())
+            .inspect_err(|e| {
+                let _ = logger::append_error(&app, "set_autostart_enabled", e);
+            })
     }
 }
 
@@ -133,10 +158,14 @@ async fn test_transcription(app: tauri::AppHandle) -> Result<String, String> {
         .ok()
         .is_none_or(|value| value.trim().is_empty())
     {
-        return Err("AZURE_OPENAI_API_KEY is not set".to_string());
+        let e = "AZURE_OPENAI_API_KEY is not set".to_string();
+        let _ = logger::append_error(&app, "test_transcription", &e);
+        return Err(e);
     }
 
-    let cfg = config::load_or_default(&app)?;
+    let cfg = config::load_or_default(&app).inspect_err(|e| {
+        let _ = logger::append_error(&app, "test_transcription", e);
+    })?;
 
     let wav_path = tauri::async_runtime::spawn_blocking(move || {
         let tmp = std::env::temp_dir().join(format!(
@@ -153,9 +182,16 @@ async fn test_transcription(app: tauri::AppHandle) -> Result<String, String> {
         Ok::<_, String>(path)
     })
     .await
-    .map_err(|e| format!("recording task failed: {e}"))??;
+    .map_err(|e| format!("recording task failed: {e}"))
+    .inspect_err(|e| {
+        let _ = logger::append_error(&app, "test_transcription", e);
+    })??;
 
-    let text = azure_transcribe::transcribe_wav(&wav_path, &cfg).await?;
+    let text = azure_transcribe::transcribe_wav(&wav_path, &cfg)
+        .await
+        .inspect_err(|e| {
+            let _ = logger::append_error(&app, "test_transcription", e);
+        })?;
     let _ = std::fs::remove_file(&wav_path);
     Ok(text)
 }
@@ -164,7 +200,11 @@ async fn test_transcription(app: tauri::AppHandle) -> Result<String, String> {
 async fn toggle_recording(
     app: tauri::AppHandle,
 ) -> Result<(), String> {
-    toggle_recording_impl(app).await
+    toggle_recording_impl(app.clone())
+        .await
+        .inspect_err(|e| {
+            let _ = logger::append_error(&app, "toggle_recording", e);
+        })
 }
 
 pub(crate) async fn toggle_recording_impl(app: tauri::AppHandle) -> Result<(), String> {
@@ -181,7 +221,9 @@ pub(crate) async fn toggle_recording_impl(app: tauri::AppHandle) -> Result<(), S
         return stop_recording_impl(app).await;
     }
 
-    let cfg = config::load_or_default(&app)?;
+    let cfg = config::load_or_default(&app).inspect_err(|e| {
+        let _ = logger::append_error(&app, "toggle_recording", e);
+    })?;
     let max_seconds = cfg.recording.max_seconds.max(1);
 
     let tmp = std::env::temp_dir().join(format!(
@@ -230,13 +272,17 @@ async fn stop_recording(
 }
 
 pub(crate) async fn stop_recording_impl(app: tauri::AppHandle) -> Result<(), String> {
-    let cfg = config::load_or_default(&app)?;
+    let cfg = config::load_or_default(&app).inspect_err(|e| {
+        let _ = logger::append_error(&app, "stop_recording", e);
+    })?;
 
     let state = app.state::<Mutex<app_state::RuntimeState>>();
     let (handle, _wav_path, transcribing_status) = {
         let mut s = state.lock().map_err(|_| "state mutex poisoned".to_string())?;
         if s.status.state != "Recording" {
-            return Err("Not recording".to_string());
+            let e = "Not recording".to_string();
+            let _ = logger::append_error(&app, "stop_recording", &e);
+            return Err(e);
         }
         s.status.state = "Transcribing".to_string();
         let status = s.status.clone();
@@ -254,10 +300,24 @@ pub(crate) async fn stop_recording_impl(app: tauri::AppHandle) -> Result<(), Str
     emit_status(&app, &transcribing_status);
     play_stop_sound();
 
-    let wav_path = match tauri::async_runtime::spawn_blocking(move || handle.stop())
+    let stop_result = tauri::async_runtime::spawn_blocking(move || handle.stop())
         .await
-        .map_err(|e| format!("recording stop task failed: {e}"))?
-    {
+        .map_err(|e| format!("recording stop task failed: {e}"));
+    let wav_path = match stop_result {
+        Ok(result) => result,
+        Err(e) => {
+            let mut s = state.lock().map_err(|_| "state mutex poisoned".to_string())?;
+            s.status.state = "Idle".to_string();
+            s.status.last_error = Some(e.clone());
+            let status = s.status.clone();
+            drop(s);
+            report_error(&app, "stop_recording", &e);
+            emit_status(&app, &status);
+            return Err(e);
+        }
+    };
+
+    let wav_path = match wav_path {
         Ok(path) => path,
         Err(e) => {
             let mut s = state.lock().map_err(|_| "state mutex poisoned".to_string())?;
@@ -265,7 +325,7 @@ pub(crate) async fn stop_recording_impl(app: tauri::AppHandle) -> Result<(), Str
             s.status.last_error = Some(e.clone());
             let status = s.status.clone();
             drop(s);
-            let _ = app.emit("error", &e);
+            report_error(&app, "stop_recording", &e);
             emit_status(&app, &status);
             return Err(e);
         }
@@ -282,7 +342,7 @@ pub(crate) async fn stop_recording_impl(app: tauri::AppHandle) -> Result<(), Str
         s.status.last_error = Some(e.clone());
         let status = s.status.clone();
         drop(s);
-        let _ = app.emit("error", &e);
+        report_error(&app, "stop_recording", &e);
         emit_status(&app, &status);
         return Err(e);
     }
@@ -296,7 +356,7 @@ pub(crate) async fn stop_recording_impl(app: tauri::AppHandle) -> Result<(), Str
             s.status.last_error = Some(e.clone());
             let status = s.status.clone();
             drop(s);
-            let _ = app.emit("error", &e);
+            report_error(&app, "stop_recording", &e);
             emit_status(&app, &status);
             return Err(e);
         }
@@ -311,9 +371,26 @@ pub(crate) async fn stop_recording_impl(app: tauri::AppHandle) -> Result<(), Str
 
     let restore = cfg.insert.restore_clipboard;
     let text2 = text.clone();
-    let insert_result = tauri::async_runtime::spawn_blocking(move || insert::clipboard_paste_restore(&text2, restore))
-        .await
-        .map_err(|e| format!("insert task failed: {e}"))?;
+    let insert_result = tauri::async_runtime::spawn_blocking(move || {
+        insert::clipboard_paste_restore(&text2, restore)
+    })
+    .await
+    .map_err(|e| format!("insert task failed: {e}"));
+
+    let insert_result = match insert_result {
+        Ok(r) => r,
+        Err(e) => {
+            let _ = std::fs::remove_file(&wav_path);
+            let mut s = state.lock().map_err(|_| "state mutex poisoned".to_string())?;
+            s.status.state = "Idle".to_string();
+            s.status.last_error = Some(e.clone());
+            let status = s.status.clone();
+            drop(s);
+            report_error(&app, "stop_recording", &e);
+            emit_status(&app, &status);
+            return Err(e);
+        }
+    };
 
     if let Err(e) = insert_result {
         let _ = std::fs::remove_file(&wav_path);
@@ -322,7 +399,7 @@ pub(crate) async fn stop_recording_impl(app: tauri::AppHandle) -> Result<(), Str
         s.status.last_error = Some(e.clone());
         let status = s.status.clone();
         drop(s);
-        let _ = app.emit("error", &e);
+        report_error(&app, "stop_recording", &e);
         emit_status(&app, &status);
         return Err(e);
     }
@@ -358,6 +435,7 @@ pub fn run() {
         .setup(|app| {
             tray::setup(&app.handle())?;
             key_listener::init(&app.handle()).map_err(|e| {
+                let _ = logger::append_error(&app.handle(), "setup:key_listener", &e);
                 tauri::Error::Setup(
                     (Box::new(std::io::Error::new(std::io::ErrorKind::Other, e))
                         as Box<dyn std::error::Error>)

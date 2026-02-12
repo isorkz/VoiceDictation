@@ -1,5 +1,6 @@
 use crate::toggle_recording_impl;
 use crate::app_state::Status;
+use crate::logger;
 use resvg::{tiny_skia, usvg};
 use std::sync::OnceLock;
 use tauri::menu::{Menu, MenuItemBuilder};
@@ -128,9 +129,10 @@ pub fn setup(app: &AppHandle) -> tauri::Result<()> {
     let toggle = MenuItemBuilder::with_id(TOGGLE_MENU_ID, "Start").build(app)?;
     let _ = TOGGLE_ITEM.set(toggle.clone());
     let settings = MenuItemBuilder::with_id("settings", "Settings").build(app)?;
+    let open_logs = MenuItemBuilder::with_id("open_logs", "Open Logs").build(app)?;
     let quit = MenuItemBuilder::with_id("quit", "Quit").build(app)?;
 
-    let menu = Menu::with_items(app, &[&toggle, &settings, &quit])?;
+    let menu = Menu::with_items(app, &[&toggle, &settings, &open_logs, &quit])?;
 
     let icon = icons()?.idle.clone();
 
@@ -149,6 +151,11 @@ pub fn setup(app: &AppHandle) -> tauri::Result<()> {
                 if let Some(window) = app.get_webview_window("main") {
                     let _ = window.show();
                     let _ = window.set_focus();
+                }
+            }
+            "open_logs" => {
+                if let Ok(dir) = logger::ensure_log_dir(app) {
+                    let _ = tauri_plugin_opener::open_path(dir, None::<&str>);
                 }
             }
             "quit" => {

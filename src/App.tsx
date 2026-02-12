@@ -144,7 +144,6 @@ function App() {
   const [autostartEnabled, setAutostartEnabled] = useState<boolean | null>(null);
   const [loading, setLoading] = useState(true);
   const [saving, setSaving] = useState(false);
-  const [error, setError] = useState<string | null>(null);
   const [testResult, setTestResult] = useState<string | null>(null);
 
   const canSave = useMemo(() => !loading && !saving, [loading, saving]);
@@ -152,7 +151,6 @@ function App() {
 
   async function reload() {
     setLoading(true);
-    setError(null);
     setTestResult(null);
     try {
       const [loadedConfig, keyStatus, loadedStatus] = await Promise.all([
@@ -166,7 +164,7 @@ function App() {
       const enabled = await invoke<boolean>("get_autostart_enabled");
       setAutostartEnabled(enabled);
     } catch (e) {
-      setError(String(e));
+      console.error(e);
     } finally {
       setLoading(false);
     }
@@ -174,25 +172,23 @@ function App() {
 
   async function save() {
     setSaving(true);
-    setError(null);
     setTestResult(null);
     try {
       await invoke("set_config", { config });
     } catch (e) {
-      setError(String(e));
+      console.error(e);
     } finally {
       setSaving(false);
     }
   }
 
   async function testTranscription() {
-    setError(null);
     setTestResult(null);
     try {
       const text = await invoke<string>("test_transcription");
       setTestResult(text);
     } catch (e) {
-      setError(String(e));
+      console.error(e);
     }
   }
 
@@ -207,24 +203,19 @@ function App() {
     const unlistenTranscript = listen<string>("transcript_ready", (event) => {
       setTestResult(event.payload);
     });
-    const unlistenError = listen<string>("error", (event) => {
-      setError(event.payload);
-    });
 
     return () => {
       void unlistenStatus.then((f) => f());
       void unlistenTranscript.then((f) => f());
-      void unlistenError.then((f) => f());
     };
   }, []);
 
   async function setAutostart(next: boolean) {
-    setError(null);
     try {
       await invoke("set_autostart_enabled", { enabled: next });
       setAutostartEnabled(next);
     } catch (e) {
-      setError(String(e));
+      console.error(e);
     }
   }
 
@@ -246,22 +237,8 @@ function App() {
               <span className="h-2 w-2 rounded-full bg-emerald-500" />
               Status: <span className="font-medium">{status.state}</span>
             </span>
-            {status.lastError ? (
-              <span className="inline-flex items-center rounded-full border border-rose-200 bg-rose-50 px-3 py-1 text-sm text-rose-800 dark:border-rose-900/50 dark:bg-rose-950 dark:text-rose-200">
-                {status.lastError}
-              </span>
-            ) : null}
           </div>
         </header>
-
-        {error ? (
-          <div
-            role="alert"
-            className="mb-6 rounded-2xl border border-rose-200 bg-rose-50 p-4 text-sm text-rose-800 dark:border-rose-900/50 dark:bg-rose-950 dark:text-rose-200"
-          >
-            {error}
-          </div>
-        ) : null}
 
         <div className="grid grid-cols-1 gap-6 lg:grid-cols-2">
           <div className="lg:col-span-2">

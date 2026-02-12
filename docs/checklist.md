@@ -21,7 +21,7 @@
 - 安全阈值：录音超过 `maxSeconds` 自动停止并进入转写流程。
 
 ### 托盘与自启动
-- Tray menu：Start/Stop、Settings、Quit（Rust：`src-tauri/src/tray.rs`）。
+- Tray menu：Start/Stop、Settings、Open Logs、Quit（Rust：`src-tauri/src/tray.rs`）。
 - 启动时主窗口默认不显示；从托盘菜单 “Settings” 打开；关闭窗口会隐藏到托盘继续运行。
 - 托盘图标会随状态变化（Idle/Recording/Transcribing/Inserting/Error）。
 - Autostart：集成 `tauri-plugin-autostart`，支持托盘与 UI 开关。
@@ -38,7 +38,7 @@
 
 ### 权限与可用性
 - 缺少“权限引导 UI/跳转系统设置”的一键按钮（目前只靠文档 + 控制台提示）。
-- 未实现系统级通知（Notification）；目前错误主要通过 UI 文本与控制台输出体现。
+- 未实现系统级通知（Notification）；错误不在 Settings 中展示，统一写入本地日志文件，可通过托盘菜单 “Open Logs” 打开日志目录查看。
 
 ### 需求扩展（明确不在 V1）
 - Direct insertion（不走剪贴板的直接写入）。
@@ -61,7 +61,7 @@
 - 点击 “Test transcription”：
   - 录音约 3 秒
   - 返回转写文本并显示在页面 “Transcript”
-  - 失败时能显示可读错误（401/404/空配置/缺 key）
+  - 失败时不在 Settings 中显示错误（401/404/空配置/缺 key）；去托盘菜单 “Open Logs” 打开日志目录查看错误信息
 
 ### 3) Start/Stop（UI 控制）
 - 点击 “Start” → Status 变为 Recording。
