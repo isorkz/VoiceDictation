@@ -433,6 +433,12 @@ pub fn run() {
             }
         })
         .setup(|app| {
+            #[cfg(target_os = "macos")]
+            {
+                app.set_activation_policy(tauri::ActivationPolicy::Accessory);
+                app.set_dock_visibility(false);
+            }
+
             tray::setup(&app.handle())?;
             key_listener::init(&app.handle()).map_err(|e| {
                 let _ = logger::append_error(&app.handle(), "setup:key_listener", &e);
