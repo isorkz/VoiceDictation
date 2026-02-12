@@ -67,6 +67,8 @@
 - 点击 “Start” → Status 变为 Recording。
 - 点击 “Stop” → Status 依次为 Transcribing → Inserting → Idle。
 - Start/Stop 触发后会播放系统提示音（用于确认触发成功）。
+  - macOS 系统音效文件位置：`/System/Library/Sounds/`（可用 Finder 打开并试听）。
+  - 若听不到提示音：System Settings → Sound → Sound Effects → “Play sound effects through” 选择当前输出设备，并调高 Sound Effects 音量。
 - 在光标所在编辑区（TextEdit/VS Code/Notepad）确认最终文字被粘贴进去。
 - `restoreClipboard=true` 时：粘贴后剪贴板内容会恢复到转写前（仅文本类型可恢复）。
 
