@@ -24,6 +24,70 @@ fn emit_status(app: &tauri::AppHandle, status: &app_state::Status) {
     let _ = tray::update_for_status(app, status);
 }
 
+#[cfg(target_os = "macos")]
+type SystemSoundID = u32;
+
+#[cfg(target_os = "macos")]
+#[link(name = "AudioToolbox", kind = "framework")]
+extern "C" {
+    fn AudioServicesCreateSystemSoundID(in_file_url: core_foundation::url::CFURLRef, out_id: *mut SystemSoundID) -> i32;
+    fn AudioServicesPlaySystemSound(in_sound_id: SystemSoundID);
+}
+
+fn play_start_sound() {
+    #[cfg(target_os = "macos")]
+    {
+        play_macos_system_sound("start");
+    }
+
+    #[cfg(windows)]
+    unsafe {
+        use windows::Win32::UI::WindowsAndMessaging::{MessageBeep, MB_OK};
+        let _ = MessageBeep(MB_OK);
+    }
+}
+
+fn play_stop_sound() {
+    #[cfg(target_os = "macos")]
+    {
+        play_macos_system_sound("stop");
+    }
+
+    #[cfg(windows)]
+    unsafe {
+        use windows::Win32::UI::WindowsAndMessaging::{MessageBeep, MB_ICONEXCLAMATION};
+        let _ = MessageBeep(MB_ICONEXCLAMATION);
+    }
+}
+
+#[cfg(target_os = "macos")]
+fn play_macos_system_sound(kind: &'static str) {
+    use core_foundation::base::TCFType as _;
+    use core_foundation::url::CFURL;
+    use std::path::Path;
+    use std::sync::OnceLock;
+
+    static START: OnceLock<Option<SystemSoundID>> = OnceLock::new();
+    static STOP: OnceLock<Option<SystemSoundID>> = OnceLock::new();
+
+    fn load(sound_path: &'static str) -> Option<SystemSoundID> {
+        let url = CFURL::from_path(Path::new(sound_path), false)?;
+        let mut id: SystemSoundID = 0;
+        let status = unsafe { AudioServicesCreateSystemSoundID(url.as_concrete_TypeRef(), &mut id) };
+        if status == 0 { Some(id) } else { None }
+    }
+
+    let id = match kind {
+        "start" => *START.get_or_init(|| load("/System/Library/Sounds/Pop.aiff")),
+        "stop" => *STOP.get_or_init(|| load("/System/Library/Sounds/Tink.aiff")),
+        _ => None,
+    };
+
+    if let Some(id) = id {
+        unsafe { AudioServicesPlaySystemSound(id) };
+    }
+}
+
 #[tauri::command]
 fn get_status(state: tauri::State<'_, Mutex<app_state::RuntimeState>>) -> app_state::Status {
     let state = state.lock().expect("state mutex poisoned");
@@ -140,6 +204,7 @@ pub(crate) async fn toggle_recording_impl(app: tauri::AppHandle) -> Result<(), S
     let status = s.status.clone();
     drop(s);
     emit_status(&app, &status);
+    play_start_sound();
 
     let app2 = app.clone();
     tauri::async_runtime::spawn_blocking(move || {
@@ -187,6 +252,7 @@ pub(crate) async fn stop_recording_impl(app: tauri::AppHandle) -> Result<(), Str
         (handle, wav_path, status)
     };
     emit_status(&app, &transcribing_status);
+    play_stop_sound();
 
     let wav_path = match tauri::async_runtime::spawn_blocking(move || handle.stop())
         .await

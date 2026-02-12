@@ -7,6 +7,7 @@
 - **macOS**：Language(Globe/Fn) 键支持「按住说话、松开转写并粘贴」+「双击开/关持续录音」。
 - **Windows**：默认热键 `Win+Shift+D`，支持「按住/双击」同样行为，并提供可配置热键。
 - V1 插入文本方式：**Clipboard + Paste**（转写结果写入剪贴板 → 模拟 Cmd+V/Ctrl+V），并**默认恢复原剪贴板**。
+- Start/Stop 后播放系统提示音（Start/Stop 两种音不同；macOS: Pop/Tink，Windows: OK/Exclamation）。
 - V2（后续）再加：Direct insertion（辅助功能/UIA 直接写入，不动剪贴板）。
 
 ## 当前仓库现状

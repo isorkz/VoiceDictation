@@ -66,6 +66,7 @@
 ### 3) Start/Stop（UI 控制）
 - 点击 “Start” → Status 变为 Recording。
 - 点击 “Stop” → Status 依次为 Transcribing → Inserting → Idle。
+- Start/Stop 触发后会播放系统提示音（用于确认触发成功）。
 - 在光标所在编辑区（TextEdit/VS Code/Notepad）确认最终文字被粘贴进去。
 - `restoreClipboard=true` 时：粘贴后剪贴板内容会恢复到转写前（仅文本类型可恢复）。
 
