@@ -18,6 +18,11 @@ Run in dev:
 npm run tauri dev
 ```
 
+Build for production:
+```bash
+npm run tauri build
+```
+
 ## Azure OpenAI API key
 
 This app reads the API key from the environment variable `AZURE_OPENAI_API_KEY` only (it is never saved to disk).
