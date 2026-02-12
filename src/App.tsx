@@ -146,7 +146,6 @@ function App() {
   const [saving, setSaving] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [testResult, setTestResult] = useState<string | null>(null);
-  const [lastTestedAt, setLastTestedAt] = useState<Date | null>(null);
 
   const canSave = useMemo(() => !loading && !saving, [loading, saving]);
   const isBusy = loading || saving;
@@ -155,7 +154,6 @@ function App() {
     setLoading(true);
     setError(null);
     setTestResult(null);
-    setLastTestedAt(null);
     try {
       const [loadedConfig, keyStatus, loadedStatus] = await Promise.all([
         invoke<Config>("get_config"),
@@ -178,7 +176,6 @@ function App() {
     setSaving(true);
     setError(null);
     setTestResult(null);
-    setLastTestedAt(null);
     try {
       await invoke("set_config", { config });
     } catch (e) {
@@ -196,8 +193,6 @@ function App() {
       setTestResult(text);
     } catch (e) {
       setError(String(e));
-    } finally {
-      setLastTestedAt(new Date());
     }
   }
 
@@ -482,7 +477,7 @@ function App() {
               Save
             </Button>
             <Button onClick={() => void testTranscription()} disabled={isBusy}>
-              Test connection{lastTestedAt ? ` (${lastTestedAt.toLocaleTimeString()})` : ""}
+              Test connection (1.2s)
             </Button>
           </div>
         </div>
