@@ -109,7 +109,7 @@ Config（存储为 JSON）字段（全部在 UI 可编辑）：
   - Hotkeys：Windows 默认热键可编辑；macOS 显示 Language(Globe/Fn) 键说明（hold/double-click）
   - Thresholds：holdMs / doubleClickMs / maxSeconds
   - Insert：restoreClipboard（开关）+ postfix（先固定 No extra）
-  - Test：测试后显示本次测试时间与耗时（便于对比网络/权限问题）
+  - Test：按钮上用括号显示上次测试时间（便于对比网络/权限问题）
 
 ## Implementation Steps（按小步提交；脚手架一次性生成除外）
 > 说明：初始化脚手架会新增大量文件；后续每个任务尽量控制为小范围（若预计 >3 个文件改动就拆分任务）。

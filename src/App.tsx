@@ -147,7 +147,6 @@ function App() {
   const [error, setError] = useState<string | null>(null);
   const [testResult, setTestResult] = useState<string | null>(null);
   const [lastTestedAt, setLastTestedAt] = useState<Date | null>(null);
-  const [lastTestDurationMs, setLastTestDurationMs] = useState<number | null>(null);
 
   const canSave = useMemo(() => !loading && !saving, [loading, saving]);
   const isBusy = loading || saving;
@@ -157,7 +156,6 @@ function App() {
     setError(null);
     setTestResult(null);
     setLastTestedAt(null);
-    setLastTestDurationMs(null);
     try {
       const [loadedConfig, keyStatus, loadedStatus] = await Promise.all([
         invoke<Config>("get_config"),
@@ -181,7 +179,6 @@ function App() {
     setError(null);
     setTestResult(null);
     setLastTestedAt(null);
-    setLastTestDurationMs(null);
     try {
       await invoke("set_config", { config });
     } catch (e) {
@@ -192,7 +189,6 @@ function App() {
   }
 
   async function testTranscription() {
-    const startedAt = Date.now();
     setError(null);
     setTestResult(null);
     try {
@@ -202,7 +198,6 @@ function App() {
       setError(String(e));
     } finally {
       setLastTestedAt(new Date());
-      setLastTestDurationMs(Date.now() - startedAt);
     }
   }
 
@@ -481,29 +476,20 @@ function App() {
               {status.state === "Recording" ? "Stop" : "Start"}
             </Button>
             <Button onClick={() => void reload()} disabled={isBusy}>
-              Refresh
+              Reset settings
             </Button>
             <Button onClick={() => void save()} disabled={!canSave} variant="primary">
               Save
             </Button>
             <Button onClick={() => void testTranscription()} disabled={isBusy}>
-              Test connection
+              Test connection{lastTestedAt ? ` (${lastTestedAt.toLocaleTimeString()})` : ""}
             </Button>
           </div>
         </div>
 
         {testResult ? (
           <div className="mt-6">
-            <Card
-              title="Transcript"
-              description={
-                lastTestedAt
-                  ? `Tested at ${lastTestedAt.toLocaleString()}${
-                      lastTestDurationMs !== null ? ` (${lastTestDurationMs}ms)` : ""
-                    }`
-                  : undefined
-              }
-            >
+            <Card title="Transcript">
               <pre className="whitespace-pre-wrap rounded-xl border border-slate-200 bg-slate-50 p-3 text-sm text-slate-900 dark:border-slate-800 dark:bg-slate-950 dark:text-slate-50">
                 {testResult}
               </pre>
