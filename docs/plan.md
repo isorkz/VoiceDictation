@@ -1,6 +1,6 @@
 # VoiceDictation（macOS/Windows）语音转文字工具（Tauri + React(TypeScript) + Azure OpenAI）
 
-> 说明：本项目计划以 `docs/plan.md` 为准；根目录 `plan.md` 仅作为历史草稿参考。
+> 本文件用于记录项目计划与架构笔记；用户使用说明以 `README.md` 为准。
 
 ## Summary（目标与成功标准）
 - 做一个常驻托盘的小工具：按住（push-to-talk）或双击（toggle）触发录音 → 调用 Azure OpenAI `gpt-4o-mini-transcribe` 转写 → 将文本写入“当前光标所在编辑区”。
@@ -153,12 +153,12 @@ Config（存储为 JSON）字段（全部在 UI 可编辑）：
 - Commit：`feat: tray, autostart, and notifications`
 
 8) Docs + smoke tests
-- `docs/`：
+- 用户手册（`README.md`）：
   - 安装/运行（dev/build）
   - macOS 权限开启与 Globe 键系统设置建议
   - Azure OpenAI 配置说明（deployment 必须是 `gpt-4o-mini-transcribe`）
-- Smoke test checklist（macOS：TextEdit/VS Code；Windows：Notepad/VS Code）
-- Commit：`docs: add setup and permissions guide`
+- 验收步骤：`docs/checklist.md`
+- Commit：`docs: update user manual`
 
 9) V2 预留（不在 V1 实现）
 - Direct insertion（mac AX / win UIA）作为可选插入方式
@@ -183,4 +183,4 @@ Config（存储为 JSON）字段（全部在 UI 可编辑）：
 - macOS 单击 Globe 键由系统处理；如与双击/按住冲突，用户需在系统设置调整 Globe 行为。
 - 默认阈值：hold 180ms；double-click 300ms；max recording 120s。
 - Windows 默认热键：`Win+Shift+D`。
-- Azure key 通过环境变量读取；文档提示风险与建议。
+- Azure API key 通过 Settings 写入本地 `config.json`（明文存储），需要在文档中明确风险与建议。

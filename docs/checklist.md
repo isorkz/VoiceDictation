@@ -6,7 +6,7 @@
 
 ### 基础工程
 - Tauri v2 + React + TypeScript 脚手架与构建链路（`npm run tauri dev` / `npm run build` / `npm run lint`）。
-- 项目基础文档：`docs/env.md`、`docs/permissions.md`、`docs/macos-globe.md`、`plan.md`。
+- 项目基础文档：`README.md`、`docs/plan.md`、`docs/checklist.md`。
 
 ### 配置与 UI
 - `config.json`（含 `azure.apiKey`）读写与默认值（Rust：`src-tauri/src/config.rs`）。
@@ -48,7 +48,7 @@
 ## 验收 Checklist（手工）
 
 ### 0) 环境准备
-- 在 Settings 里设置 Azure API key（见 `docs/env.md`）。
+- 在 Settings 里设置 Azure API key。
 - 启动开发版：`npm run tauri dev`。
 
 ### 1) Settings UI 基本可用
@@ -73,7 +73,7 @@
 - `restoreClipboard=true` 时：粘贴后剪贴板内容会恢复到转写前（仅文本类型可恢复）。
 
 ### 4) 全局触发（macOS）
-- 已授予权限：Microphone + Input Monitoring + Accessibility（见 `docs/permissions.md`）。
+- 已授予权限：Microphone + Input Monitoring + Accessibility。
 - Hold Globe/Fn：
   - 按住超过 holdMs：开始 Recording
   - 松开：停止 → 转写 → 粘贴到当前光标位置
