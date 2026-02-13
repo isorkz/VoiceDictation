@@ -13,7 +13,7 @@ vi.mock("@tauri-apps/api/event", () => ({
 }));
 
 const baseConfig = {
-  azure: { endpoint: "", deployment: "", apiVersion: "2025-03-01-preview" },
+  azure: { endpoint: "", deployment: "", apiVersion: "2025-03-01-preview", apiKey: "" },
   hotkey: { windows: "Win+Shift+D" },
   thresholds: { holdMs: 180, doubleClickMs: 300 },
   recording: { maxSeconds: 120 },
@@ -25,8 +25,6 @@ function mockInvoke() {
     switch (cmd) {
       case "get_config":
         return Promise.resolve(baseConfig);
-      case "check_api_key":
-        return Promise.resolve({ present: false });
       case "get_status":
         return Promise.resolve({ state: "Idle", lastError: null });
       case "get_autostart_enabled":
@@ -56,6 +54,10 @@ describe("App", () => {
     const deployment = screen.getByLabelText(/Deployment/i);
     fireEvent.change(deployment, { target: { value: "gpt-4o-mini-transcribe" } });
     expect(deployment).toHaveValue("gpt-4o-mini-transcribe");
+
+    const apiKey = screen.getByLabelText(/^API key$/i);
+    fireEvent.change(apiKey, { target: { value: "test-key" } });
+    expect(apiKey).toHaveValue("test-key");
 
     const holdMs = screen.getByLabelText(/Hold \(ms\)/i);
     fireEvent.change(holdMs, { target: { value: "200" } });

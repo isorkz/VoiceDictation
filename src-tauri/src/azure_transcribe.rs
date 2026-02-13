@@ -8,10 +8,9 @@ struct TranscriptionResponse {
 }
 
 pub async fn transcribe_wav(path: &Path, cfg: &config::Config) -> Result<String, String> {
-    let api_key = std::env::var("AZURE_OPENAI_API_KEY")
-        .map_err(|_| "AZURE_OPENAI_API_KEY is not set".to_string())?;
-    if api_key.trim().is_empty() {
-        return Err("AZURE_OPENAI_API_KEY is empty".to_string());
+    let api_key = cfg.azure.api_key.trim();
+    if api_key.is_empty() {
+        return Err("Azure apiKey is empty".to_string());
     }
 
     let endpoint = cfg.azure.endpoint.trim().trim_end_matches('/');
@@ -65,4 +64,3 @@ pub async fn transcribe_wav(path: &Path, cfg: &config::Config) -> Result<String,
 
     Ok(parsed.text)
 }
-

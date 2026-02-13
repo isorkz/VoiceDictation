@@ -19,6 +19,7 @@ pub struct AzureConfig {
     pub endpoint: String,
     pub deployment: String,
     pub api_version: String,
+    pub api_key: String,
 }
 
 #[derive(Debug, Clone, Serialize, Deserialize)]
@@ -71,6 +72,7 @@ impl Default for AzureConfig {
             endpoint: String::new(),
             deployment: String::new(),
             api_version: "2025-03-01-preview".to_string(),
+            api_key: String::new(),
         }
     }
 }

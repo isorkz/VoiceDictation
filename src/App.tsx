@@ -10,6 +10,7 @@ type Config = {
     endpoint: string;
     deployment: string;
     apiVersion: string;
+    apiKey: string;
   };
   hotkey: {
     windows: string;
@@ -33,7 +34,7 @@ type Status = {
 };
 
 const defaultConfig: Config = {
-  azure: { endpoint: "", deployment: "", apiVersion: "2025-03-01-preview" },
+  azure: { endpoint: "", deployment: "", apiVersion: "2025-03-01-preview", apiKey: "" },
   hotkey: { windows: "Win+Shift+D" },
   thresholds: { holdMs: 180, doubleClickMs: 300 },
   recording: { maxSeconds: 120 },
@@ -98,7 +99,7 @@ function Input({
   value: string | number;
   onChange: (value: string) => void;
   placeholder?: string;
-  type?: "text" | "number";
+  type?: "text" | "number" | "password";
   min?: number;
 }) {
   return (
@@ -139,7 +140,6 @@ function Switch({
 
 function App() {
   const [config, setConfig] = useState<Config>(defaultConfig);
-  const [apiKeyPresent, setApiKeyPresent] = useState<boolean | null>(null);
   const [status, setStatus] = useState<Status>({ state: "Idle", lastError: null });
   const [autostartEnabled, setAutostartEnabled] = useState<boolean | null>(null);
   const [loading, setLoading] = useState(true);
@@ -153,13 +153,11 @@ function App() {
     setLoading(true);
     setTestResult(null);
     try {
-      const [loadedConfig, keyStatus, loadedStatus] = await Promise.all([
+      const [loadedConfig, loadedStatus] = await Promise.all([
         invoke<Config>("get_config"),
-        invoke<{ present: boolean }>("check_api_key"),
         invoke<Status>("get_status"),
       ]);
       setConfig(loadedConfig);
-      setApiKeyPresent(keyStatus.present);
       setStatus(loadedStatus);
       const enabled = await invoke<boolean>("get_autostart_enabled");
       setAutostartEnabled(enabled);
@@ -228,7 +226,7 @@ function App() {
               VoiceDictation
             </h1>
             <p className="mt-1 text-sm text-slate-600 dark:text-slate-300">
-              Settings (API key is read from env only).
+              Settings.
             </p>
           </div>
 
@@ -242,7 +240,7 @@ function App() {
 
         <div className="grid grid-cols-1 gap-6 lg:grid-cols-2">
           <div className="lg:col-span-2">
-            <Card title="Azure" description="Endpoint / deployment / API version (API key comes from env).">
+            <Card title="Azure" description="Endpoint / deployment / API version / API key.">
               <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
                 <label className="sm:col-span-2">
                   <span className="text-sm font-medium text-slate-800 dark:text-slate-200">
@@ -292,15 +290,30 @@ function App() {
                   />
                 </label>
 
+                <label>
+                  <span className="text-sm font-medium text-slate-800 dark:text-slate-200">
+                    API key
+                  </span>
+                  <Input
+                    type="password"
+                    value={config.azure.apiKey}
+                    onChange={(value) => {
+                      setConfig((prev) => ({
+                        ...prev,
+                        azure: { ...prev.azure, apiKey: value },
+                      }));
+                    }}
+                    placeholder="api key"
+                  />
+                </label>
+
                 <div className="flex items-end">
                   <p className="text-sm text-slate-700 dark:text-slate-200">
-                    API key: <code className="rounded bg-slate-100 px-1.5 py-0.5 dark:bg-slate-800">AZURE_OPENAI_API_KEY</code>{" "}
-                    {apiKeyPresent === null ? (
-                      <span className="text-slate-500 dark:text-slate-400">(checking...)</span>
-                    ) : apiKeyPresent ? (
-                      <span className="text-emerald-700 dark:text-emerald-300">(detected)</span>
+                    API key:{" "}
+                    {config.azure.apiKey.trim() ? (
+                      <span className="text-emerald-700 dark:text-emerald-300">(set)</span>
                     ) : (
-                      <span className="text-rose-700 dark:text-rose-300">(not detected)</span>
+                      <span className="text-rose-700 dark:text-rose-300">(not set)</span>
                     )}
                   </p>
                 </div>

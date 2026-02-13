@@ -9,9 +9,9 @@
 - 项目基础文档：`docs/env.md`、`docs/permissions.md`、`docs/macos-globe.md`、`plan.md`。
 
 ### 配置与 UI
-- `config.json`（不含 key）读写与默认值（Rust：`src-tauri/src/config.rs`）。
+- `config.json`（含 `azure.apiKey`）读写与默认值（Rust：`src-tauri/src/config.rs`）。
 - Settings UI：编辑 `endpoint/deployment/apiVersion`、Windows hotkey 字符串、hold/doubleClick 阈值、maxSeconds、restoreClipboard、autostart 开关（TS：`src/App.tsx`）。
-- API key 仅从环境变量读取：`AZURE_OPENAI_API_KEY`（UI 显示 detected/not detected）。
+- API key 写入 `config.json`：`azure.apiKey`（UI 显示 set/not set）。
 
 ### 录音 → 转写 → 写入
 - 录音：跨平台采集麦克风 → WAV（mono）并重采样到 16k（Rust：`src-tauri/src/audio.rs`）。
@@ -48,13 +48,13 @@
 ## 验收 Checklist（手工）
 
 ### 0) 环境准备
-- 设置 `AZURE_OPENAI_API_KEY`（mac/Windows 的 GUI/自启动环境变量注意事项见 `docs/env.md`）。
+- 在 Settings 里设置 Azure API key（见 `docs/env.md`）。
 - 启动开发版：`npm run tauri dev`。
 
 ### 1) Settings UI 基本可用
 - 能打开主窗口并看到 Status（Idle/Recording/…）。
 - 能保存并重载 `endpoint/deployment/apiVersion`（重启后仍保留）。
-- `AZURE_OPENAI_API_KEY` 状态显示正确（detected / not detected）。
+- API key 状态显示正确（set / not set）。
 - Autostart 开关可切换（允许的话，重启系统/注销后验证是否自启动）。
 
 ### 2) Test transcription（端到端）

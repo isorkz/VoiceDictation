@@ -25,7 +25,7 @@ npm run tauri build
 
 ## Azure OpenAI API key
 
-This app reads the API key from the environment variable `AZURE_OPENAI_API_KEY` only (it is never saved to disk).
+Set the API key in Settings. It is saved to the app config file (`config.json`) on disk.
 
 See:
 - `docs/env.md`
@@ -34,4 +34,3 @@ See:
 
 - `docs/env.md`
 - `docs/permissions.md`
-

@@ -7,18 +7,11 @@ mod tray;
 mod key_listener;
 mod logger;
 
-use serde::Serialize;
 use std::sync::Mutex;
 use tauri::Emitter;
 use tauri::Manager;
 use tauri_plugin_autostart::ManagerExt as _;
 use std::time::Duration;
-
-#[derive(Serialize)]
-#[serde(rename_all = "camelCase")]
-struct ApiKeyStatus {
-    present: bool,
-}
 
 fn emit_status(app: &tauri::AppHandle, status: &app_state::Status) {
     let _ = app.emit("status_changed", status);
@@ -101,15 +94,6 @@ fn get_status(state: tauri::State<'_, Mutex<app_state::RuntimeState>>) -> app_st
 }
 
 #[tauri::command]
-fn check_api_key() -> ApiKeyStatus {
-    let present = std::env::var("AZURE_OPENAI_API_KEY")
-        .ok()
-        .is_some_and(|value| !value.trim().is_empty());
-
-    ApiKeyStatus { present }
-}
-
-#[tauri::command]
 fn get_config(app: tauri::AppHandle) -> Result<config::Config, String> {
     config::load_or_default(&app).inspect_err(|e| {
         let _ = logger::append_error(&app, "get_config", e);
@@ -154,15 +138,6 @@ fn set_autostart_enabled(app: tauri::AppHandle, enabled: bool) -> Result<(), Str
 
 #[tauri::command]
 async fn test_transcription(app: tauri::AppHandle) -> Result<String, String> {
-    if std::env::var("AZURE_OPENAI_API_KEY")
-        .ok()
-        .is_none_or(|value| value.trim().is_empty())
-    {
-        let e = "AZURE_OPENAI_API_KEY is not set".to_string();
-        let _ = logger::append_error(&app, "test_transcription", &e);
-        return Err(e);
-    }
-
     let cfg = config::load_or_default(&app).inspect_err(|e| {
         let _ = logger::append_error(&app, "test_transcription", e);
     })?;
@@ -331,12 +306,9 @@ pub(crate) async fn stop_recording_impl(app: tauri::AppHandle) -> Result<(), Str
         }
     };
 
-    let api_key_missing = std::env::var("AZURE_OPENAI_API_KEY")
-        .ok()
-        .is_none_or(|value| value.trim().is_empty());
-    if api_key_missing {
+    if cfg.azure.api_key.trim().is_empty() {
         let _ = std::fs::remove_file(&wav_path);
-        let e = "AZURE_OPENAI_API_KEY is not set".to_string();
+        let e = "Azure apiKey is empty".to_string();
         let mut s = state.lock().map_err(|_| "state mutex poisoned".to_string())?;
         s.status.state = "Idle".to_string();
         s.status.last_error = Some(e.clone());
@@ -452,7 +424,6 @@ pub fn run() {
         })
         .invoke_handler(tauri::generate_handler![
             get_status,
-            check_api_key,
             get_config,
             set_config,
             get_autostart_enabled,
