@@ -14,6 +14,7 @@ Required:
 
 Note:
 - The macOS app runs in tray-only mode (no Dock icon and not shown in Cmd+Tab). Use the tray icon/menu to interact with it.
+- The first time you start recording, macOS should show a Microphone permission prompt. If it doesn't, check System Settings → Privacy & Security → Microphone.
 
 If a feature is not working, check:
 System Settings → Privacy & Security → (Microphone / Input Monitoring / Accessibility)
