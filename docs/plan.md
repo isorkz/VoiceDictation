@@ -184,3 +184,10 @@ Config（存储为 JSON）字段（全部在 UI 可编辑）：
 - 默认阈值：hold 180ms；double-click 300ms；max recording 120s。
 - Windows 默认热键：`Win+Shift+D`。
 - Azure API key 通过 Settings 写入本地 `config.json`（明文存储），需要在文档中明确风险与建议。
+
+## Release & Update（V1）
+- 发行渠道：仅 GitHub Releases（macOS/Windows）。
+- 发布触发：`git tag vX.Y.Z && git push --tags` 自动构建并发布。
+- 更新方式：不提供 App 内更新，用户手动从 GitHub Releases 下载新版本。
+- 不做平台代码签名（接受系统警告）。
+- 具体流程与配置见：`docs/release.md`。

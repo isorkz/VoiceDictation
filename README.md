@@ -102,6 +102,10 @@ System Settings → Keyboard → (Keyboard Shortcuts / Press Globe key to …)
 
 Pick an action that does not conflict with your usage (for example, "Do Nothing" if available).
 
+### Updates
+
+Download new versions from GitHub Releases and install manually.
+
 ## Docs
 
 - `docs/checklist.md` (implementation status + manual verification checklist)

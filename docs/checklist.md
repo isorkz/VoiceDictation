@@ -26,6 +26,12 @@
 - 托盘图标会随状态变化（Idle/Recording/Transcribing/Inserting/Error）。
 - Autostart：集成 `tauri-plugin-autostart`，支持托盘与 UI 开关。
 
+### 发布与更新
+- GitHub 远程仓库（public）并配置 `origin`。
+- Release 工作流（tag 触发、macOS/Windows 构建）。
+- 发布与更新文档 `docs/release.md`。
+- `CHANGELOG.md`（记录版本变更）。
+
 ### 全局触发
 - Windows：`WH_KEYBOARD_LL` 监听（默认 `Win+Shift+D`；支持按住触发、双击 toggle）（Rust：`src-tauri/src/key_listener/windows.rs`）。
 - macOS：方案 A（`CGEventTap` best-effort 监听 Globe/Fn 的 hold/double-click）（Rust：`src-tauri/src/key_listener/macos.rs`）。
