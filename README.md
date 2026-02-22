@@ -76,6 +76,8 @@ You can also edit the config file manually:
 - `azure.deployment`: deployment name
 - `azure.apiVersion`: API version
 
+Transcription note: the app prompts the model to use Simplified Chinese for Chinese words while keeping English unchanged.
+
 Security note: the API key is stored on disk (plain text). Treat the config file as sensitive data and protect your user account accordingly.
 
 ## Usage

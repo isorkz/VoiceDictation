@@ -38,7 +38,12 @@ pub async fn transcribe_wav(path: &Path, cfg: &config::Config) -> Result<String,
         .mime_str("audio/wav")
         .map_err(|e| format!("failed to create multipart part: {e}"))?;
 
-    let form = multipart::Form::new().part("file", file_part);
+    let form = multipart::Form::new()
+        .part("file", file_part)
+        .text(
+            "prompt",
+            "Use Simplified Chinese for Chinese words; keep English words as-is; preserve punctuation and code.",
+        );
 
     let client = reqwest::Client::new();
     let resp = client
