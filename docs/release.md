@@ -32,9 +32,11 @@
 - `git push --tags`
 
 ### 3) GitHub Actions
-- 自动构建 macOS/Windows 产物。
+- 自动构建 macOS 产物。
+- 对 `.app` 做 ad-hoc 重新签名，避免 Gatekeeper 报 “damaged”。
+- 使用本地 `hdiutil` 重新打包 DMG。
 - 发布到 GitHub Releases。
- - Workflow 文件：`.github/workflows/release.yml`
+  - Workflow 文件：`.github/workflows/release.yml`
 
 ### 4) 验证
 - 确认 Release 中存在安装包。
@@ -42,4 +44,6 @@
 
 ## Troubleshooting
 - Release 缺少产物：检查 GitHub Actions 日志。
-- macOS/Windows 警告：无平台签名证书导致，属预期行为。
+- macOS 警告：无平台签名证书导致，属预期行为。
+- macOS 仍无法打开：让用户移除隔离标记：
+  - `xattr -dr com.apple.quarantine /Applications/VoiceDictation.app`

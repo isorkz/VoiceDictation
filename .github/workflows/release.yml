@@ -30,12 +30,32 @@ jobs:
       - name: Install dependencies
         run: npm ci
 
-      - uses: tauri-apps/tauri-action@action-v0.6.1
+      - name: Build app bundle
+        run: npm run tauri -- build --bundles app
+
+      - name: Ad-hoc sign app bundle
+        run: |
+          APP_PATH="src-tauri/target/release/bundle/macos/VoiceDictation.app"
+          codesign --force --deep --sign - "$APP_PATH"
+          codesign --verify --deep --strict --verbose=4 "$APP_PATH"
+
+      - name: Create DMG
+        run: |
+          VERSION="${GITHUB_REF_NAME#v}"
+          ARCH="$(uname -m)"
+          if [ "$ARCH" = "arm64" ]; then
+            ARCH_NAME="aarch64"
+          else
+            ARCH_NAME="x64"
+          fi
+          DMG_NAME="VoiceDictation_${VERSION}_${ARCH_NAME}.dmg"
+          hdiutil create -volname "VoiceDictation" -srcfolder "src-tauri/target/release/bundle/macos/VoiceDictation.app" -ov -format UDZO "$DMG_NAME"
+
+      - name: Upload release
+        uses: softprops/action-gh-release@v2
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         with:
-          tagName: ${{ github.ref_name }}
-          releaseName: "VoiceDictation v__VERSION__"
-          releaseBody: "See CHANGELOG.md for details."
-          releaseDraft: false
-          prerelease: false
+          name: "VoiceDictation ${{ github.ref_name }}"
+          body: "See CHANGELOG.md for details."
+          files: "VoiceDictation_*.dmg"
