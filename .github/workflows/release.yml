@@ -49,7 +49,10 @@ jobs:
             ARCH_NAME="x64"
           fi
           DMG_NAME="VoiceDictation_${VERSION}_${ARCH_NAME}.dmg"
-          hdiutil create -volname "VoiceDictation" -srcfolder "src-tauri/target/release/bundle/macos/VoiceDictation.app" -ov -format UDZO "$DMG_NAME"
+          STAGING_DIR="$(mktemp -d)"
+          cp -R "src-tauri/target/release/bundle/macos/VoiceDictation.app" "$STAGING_DIR/"
+          ln -s /Applications "$STAGING_DIR/Applications"
+          hdiutil create -volname "VoiceDictation" -srcfolder "$STAGING_DIR" -ov -format UDZO "$DMG_NAME"
 
       - name: Upload release
         uses: softprops/action-gh-release@v2
