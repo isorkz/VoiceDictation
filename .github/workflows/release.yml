@@ -31,7 +31,13 @@ jobs:
         run: npm ci
 
       - name: Build app bundle
-        run: npm run tauri -- build --bundles all
+        shell: bash
+        run: |
+          if [ "${{ matrix.platform }}" = "windows-latest" ]; then
+            npm run tauri -- build --bundles msi nsis
+          else
+            npm run tauri -- build --bundles app
+          fi
 
       - name: Ad-hoc sign app bundle
         if: matrix.platform == 'macos-latest'
