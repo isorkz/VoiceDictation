@@ -41,7 +41,8 @@ fn play_start_sound() {
 
     #[cfg(windows)]
     unsafe {
-        use windows::Win32::UI::WindowsAndMessaging::{MessageBeep, MB_OK};
+        use windows::Win32::System::Diagnostics::Debug::MessageBeep;
+        use windows::Win32::UI::WindowsAndMessaging::MB_OK;
         let _ = MessageBeep(MB_OK);
     }
 }
@@ -54,7 +55,8 @@ fn play_stop_sound() {
 
     #[cfg(windows)]
     unsafe {
-        use windows::Win32::UI::WindowsAndMessaging::{MessageBeep, MB_ICONEXCLAMATION};
+        use windows::Win32::System::Diagnostics::Debug::MessageBeep;
+        use windows::Win32::UI::WindowsAndMessaging::MB_ICONEXCLAMATION;
         let _ = MessageBeep(MB_ICONEXCLAMATION);
     }
 }

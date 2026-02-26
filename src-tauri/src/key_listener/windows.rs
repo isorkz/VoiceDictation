@@ -4,10 +4,10 @@ use std::time::{Duration, Instant};
 use tauri::AppHandle;
 use windows::Win32::Foundation::{HINSTANCE, LPARAM, LRESULT, WPARAM};
 use windows::Win32::System::LibraryLoader::GetModuleHandleW;
-use windows::Win32::UI::Input::KeyboardAndMouse::{KBDLLHOOKSTRUCT, VK_LSHIFT, VK_LWIN, VK_RSHIFT};
+use windows::Win32::UI::Input::KeyboardAndMouse::{VK_LSHIFT, VK_RSHIFT};
 use windows::Win32::UI::WindowsAndMessaging::{
     CallNextHookEx, DispatchMessageW, GetMessageW, SetWindowsHookExW, TranslateMessage, UnhookWindowsHookEx,
-    HHOOK, MSG, WH_KEYBOARD_LL, WM_KEYDOWN, WM_KEYUP, WM_SYSKEYDOWN, WM_SYSKEYUP,
+    HHOOK, KBDLLHOOKSTRUCT, MSG, WH_KEYBOARD_LL, WM_KEYDOWN, WM_KEYUP, WM_SYSKEYDOWN, WM_SYSKEYUP,
 };
 
 #[derive(Clone, Copy)]
@@ -67,11 +67,12 @@ pub fn init(app: &AppHandle) -> Result<(), String> {
     HOOK.get_or_init(|| Mutex::new(None));
 
     std::thread::spawn(move || unsafe {
-        let module: HINSTANCE = GetModuleHandleW(None).unwrap_or(HINSTANCE(0));
-        let hook = SetWindowsHookExW(WH_KEYBOARD_LL, Some(hook_proc), module, 0);
-        if hook.0 == 0 {
-            return;
-        }
+        let module: HINSTANCE = GetModuleHandleW(None).unwrap_or_default().into();
+        let hook = match SetWindowsHookExW(WH_KEYBOARD_LL, Some(hook_proc), module, 0) {
+            Ok(hook) => hook,
+            Err(_) => return,
+        };
+        if hook.0 == 0 { return; }
 
         if let Ok(mut slot) = HOOK.get().unwrap().lock() {
             *slot = Some(hook);
@@ -121,9 +122,12 @@ unsafe extern "system" fn hook_proc(code: i32, wparam: WPARAM, lparam: LPARAM) -
         None => return CallNextHookEx(None, code, wparam, lparam),
     };
 
+    const VK_LSHIFT_U32: u32 = VK_LSHIFT.0 as u32;
+    const VK_RSHIFT_U32: u32 = VK_RSHIFT.0 as u32;
+
     match vk {
         0x5B | 0x5C => st.pressed_win = is_down,
-        VK_LSHIFT.0 as u32 | VK_RSHIFT.0 as u32 => st.pressed_shift = is_down,
+        VK_LSHIFT_U32 | VK_RSHIFT_U32 => st.pressed_shift = is_down,
         0x11 => st.pressed_ctrl = is_down,
         0x12 => st.pressed_alt = is_down,
         _ => {}
