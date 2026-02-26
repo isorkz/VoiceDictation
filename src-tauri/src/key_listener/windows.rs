@@ -106,12 +106,12 @@ unsafe extern "system" fn hook_proc(code: i32, wparam: WPARAM, lparam: LPARAM) -
     let hotkey = HOTKEY
         .get()
         .and_then(|m| m.lock().ok())
-        .copied()
+        .map(|g| *g)
         .unwrap_or(parse_hotkey("Win+Shift+D"));
     let thresholds = THRESHOLDS
         .get()
         .and_then(|m| m.lock().ok())
-        .copied()
+        .map(|g| *g)
         .unwrap_or(Thresholds {
             hold_ms: 180,
             double_click_ms: 300,
