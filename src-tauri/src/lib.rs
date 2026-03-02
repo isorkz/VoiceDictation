@@ -110,6 +110,20 @@ fn set_config(app: tauri::AppHandle, config: config::Config) -> Result<(), Strin
 }
 
 #[tauri::command]
+fn reset_config(app: tauri::AppHandle) -> Result<config::Config, String> {
+    let current = config::load_or_default(&app).inspect_err(|e| {
+        let _ = logger::append_error(&app, "reset_config", e);
+    })?;
+    let mut next = config::Config::default();
+    next.azure = current.azure;
+
+    config::save(&app, &next).inspect_err(|e| {
+        let _ = logger::append_error(&app, "reset_config", e);
+    })?;
+    Ok(next)
+}
+
+#[tauri::command]
 fn get_autostart_enabled(app: tauri::AppHandle) -> Result<bool, String> {
     app.autolaunch()
         .is_enabled()
@@ -428,6 +442,7 @@ pub fn run() {
             get_status,
             get_config,
             set_config,
+            reset_config,
             get_autostart_enabled,
             set_autostart_enabled,
             test_transcription,

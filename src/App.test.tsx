@@ -33,6 +33,8 @@ function mockInvoke() {
         return Promise.resolve(null);
       case "set_config":
         return Promise.resolve(null);
+      case "reset_config":
+        return Promise.resolve(baseConfig);
       default:
         return Promise.reject(new Error(`Unexpected invoke: ${cmd}`));
     }
@@ -73,5 +75,10 @@ describe("App", () => {
     await waitFor(() =>
       expect(vi.mocked(invoke)).toHaveBeenCalledWith("set_autostart_enabled", { enabled: true }),
     );
+
+    const reset = screen.getByRole("button", { name: /Reset settings/i });
+    fireEvent.click(reset);
+
+    await waitFor(() => expect(vi.mocked(invoke)).toHaveBeenCalledWith("reset_config"));
   });
 });

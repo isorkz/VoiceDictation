@@ -180,6 +180,19 @@ function App() {
     }
   }
 
+  async function resetSettings() {
+    setSaving(true);
+    setTestResult(null);
+    try {
+      const next = await invoke<Config>("reset_config");
+      setConfig(next);
+    } catch (e) {
+      console.error(e);
+    } finally {
+      setSaving(false);
+    }
+  }
+
   async function testTranscription() {
     setTestResult(null);
     try {
@@ -447,7 +460,7 @@ function App() {
             <Button onClick={() => void save()} disabled={!canSave} variant="primary">
               Save
             </Button>
-            <Button onClick={() => void reload()} disabled={isBusy}>
+            <Button onClick={() => void resetSettings()} disabled={isBusy}>
               Reset settings
             </Button>
             <Button onClick={() => void testTranscription()} disabled={isBusy}>
