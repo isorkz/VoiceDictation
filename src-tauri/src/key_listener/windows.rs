@@ -120,7 +120,7 @@ unsafe extern "system" fn hook_proc(code: i32, wparam: WPARAM, lparam: LPARAM) -
         .get()
         .and_then(|m| m.lock().ok())
         .map(|g| *g)
-        .unwrap_or(parse_hotkey("Ctrl"));
+        .unwrap_or(parse_hotkey("RightCtrl"));
     let thresholds = THRESHOLDS
         .get()
         .and_then(|m| m.lock().ok())
@@ -245,6 +245,14 @@ fn parse_hotkey(input: &str) -> Hotkey {
         match part.to_ascii_lowercase().as_str() {
             "win" | "meta" | "super" => hk.win = true,
             "shift" => hk.shift = true,
+            "rightctrl" | "rctrl" | "rightcontrol" => {
+                hk.key_vk = VK_RCTRL;
+                has_key = true;
+            }
+            "leftctrl" | "lctrl" | "leftcontrol" => {
+                hk.key_vk = VK_LCTRL;
+                has_key = true;
+            }
             "ctrl" | "control" => hk.ctrl = true,
             "alt" => hk.alt = true,
             k if k.len() == 1 => {

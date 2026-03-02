@@ -102,11 +102,11 @@ System Settings → Keyboard → (Keyboard Shortcuts / Press Globe key to …)
 
 Pick an action that does not conflict with your usage (for example, "Do Nothing" if available).
 
-### Windows: Ctrl
+### Windows: RightCtrl
 
 VoiceDictation supports:
-- hold `Ctrl` to start recording, release to stop + transcribe + paste
-- double-click `Ctrl` to toggle recording on/off
+- hold `RightCtrl` to start recording, release to stop + transcribe + paste
+- double-click `RightCtrl` to toggle recording on/off
 
 You can change this in Settings (`Hotkey -> Windows default hotkey`) and restart the app to apply.
 

@@ -38,7 +38,7 @@ type Status = {
 
 const defaultConfig: Config = {
   azure: { endpoint: "", deployment: "", apiVersion: "2025-03-01-preview", apiKey: "" },
-  hotkey: { windows: "Ctrl" },
+  hotkey: { windows: "RightCtrl" },
   thresholds: { holdMs: 180, doubleClickMs: 300 },
   recording: { maxSeconds: 120 },
   insert: { restoreClipboard: true, postfix: "none" },
@@ -367,7 +367,7 @@ function App() {
                       hotkey: { ...prev.hotkey, windows: value },
                     }));
                   }}
-                  placeholder="Ctrl"
+                  placeholder="RightCtrl"
                 />
               </label>
 

@@ -88,7 +88,7 @@ impl Default for AzureConfig {
 impl Default for HotkeyConfig {
     fn default() -> Self {
         Self {
-            windows: "Ctrl".to_string(),
+            windows: "RightCtrl".to_string(),
         }
     }
 }
