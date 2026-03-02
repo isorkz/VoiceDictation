@@ -5,7 +5,7 @@
 ## Summary（目标与成功标准）
 - 做一个常驻托盘的小工具：按住（push-to-talk）或双击（toggle）触发录音 → 调用 Azure OpenAI `gpt-4o-mini-transcribe` 转写 → 将文本写入“当前光标所在编辑区”。
 - **macOS**：Language(Globe/Fn) 键支持「按住说话、松开转写并粘贴」+「双击开/关持续录音」。
-- **Windows**：默认热键 `Win+Shift+D`，支持「按住/双击」同样行为，并提供可配置热键。
+- **Windows**：默认热键 `Ctrl`，支持「按住/双击」同样行为，并提供可配置热键。
 - V1 插入文本方式：**Clipboard + Paste**（转写结果写入剪贴板 → 模拟 Cmd+V/Ctrl+V），并**默认恢复原剪贴板**。
 - Start/Stop 后播放系统提示音（Start/Stop 两种音不同；macOS: Pop/Tink，Windows: OK/Exclamation）。
 - V2（后续）再加：Direct insertion（辅助功能/UIA 直接写入，不动剪贴板）。
@@ -40,7 +40,7 @@ Config（存储为 JSON）字段（全部在 UI 可编辑）：
 - `azure.endpoint`（例：`https://<resource>.openai.azure.com`）
 - `azure.deployment`（部署名，指向 `gpt-4o-mini-transcribe`）
 - `azure.apiVersion`（默认：`2025-03-01-preview`；必要时可在 UI 改）
-- `hotkey.windows`（默认：`Win+Shift+D`）
+- `hotkey.windows`（默认：`Ctrl`）
 - `thresholds.holdMs`（默认：180ms）
 - `thresholds.doubleClickMs`（默认：300ms）
 - `recording.maxSeconds`（默认：120s；toggle 模式同样限制）
@@ -64,7 +64,7 @@ Config（存储为 JSON）字段（全部在 UI 可编辑）：
   - 我们监听 Globe/Fn 的 down/up 与时间间隔。
   - 对于 hold/double-click 触发的那次会尽力吞掉相关事件（至少吞 key up），以减少触发系统切换输入法的概率。
   - 但由于 macOS 对 Globe 键的系统行为可能在按键流程中提前触发，**文档里会明确：若出现输入法切换/弹窗干扰，需要用户在系统里把 Globe 行为改成 Do Nothing/Emoji 等**（并给出具体路径）。
-- Windows：默认 `Win+Shift+D`，并在设置中可改。
+- Windows：默认 `Ctrl`，并在设置中可改。
 
 ## Azure OpenAI Transcription（REST after stop）
 - 在 key up / toggle stop 时生成音频文件（WAV，mono，16k 或设备原采样率后重采样到 16k）。
@@ -143,7 +143,7 @@ Config（存储为 JSON）字段（全部在 UI 可编辑）：
 
 6) Global hotkey / key listener
 - macOS：CGEventTap 监听 Globe/Fn；实现 hold/double-click 识别与录音状态机驱动
-- Windows：WH_KEYBOARD_LL 监听 `Win+Shift+D` 并可配置
+- Windows：WH_KEYBOARD_LL 监听 `Ctrl` 并可配置
 - Commit A：`feat: language key trigger on macOS`
 - Commit B：`feat: hotkey trigger on Windows`
 
@@ -182,7 +182,7 @@ Config（存储为 JSON）字段（全部在 UI 可编辑）：
 - 转写使用 REST `/audio/transcriptions`，在停止录音后一次性上传。
 - macOS 单击 Globe 键由系统处理；如与双击/按住冲突，用户需在系统设置调整 Globe 行为。
 - 默认阈值：hold 180ms；double-click 300ms；max recording 120s。
-- Windows 默认热键：`Win+Shift+D`。
+- Windows 默认热键：`Ctrl`。
 - Azure API key 通过 Settings 写入本地 `config.json`（明文存储），需要在文档中明确风险与建议。
 
 ## Release & Update（V1）

@@ -33,13 +33,13 @@
 - `CHANGELOG.md`（记录版本变更）。
 
 ### 全局触发
-- Windows：`WH_KEYBOARD_LL` 监听（默认 `Win+Shift+D`；支持按住触发、双击 toggle）（Rust：`src-tauri/src/key_listener/windows.rs`）。
+- Windows：`WH_KEYBOARD_LL` 监听（默认 `Ctrl`；支持按住触发、双击 toggle）（Rust：`src-tauri/src/key_listener/windows.rs`）。
 - macOS：方案 A（`CGEventTap` best-effort 监听 Globe/Fn 的 hold/double-click）（Rust：`src-tauri/src/key_listener/macos.rs`）。
 
 ## 剩余（未完成 / 已知缺口）
 
 ### Hotkey 与配置细节
-- Windows hotkey 解析目前只支持 `Win/Ctrl/Alt/Shift` + **单个字母键**（例如 `Win+Shift+D`）；不支持 `Space`/`F1`/`RightAlt` 等。
+- Windows hotkey 解析目前只支持 `Win/Ctrl/Alt/Shift` + **单个字母键**，或纯单个修饰键（如 `Ctrl`）；不支持 `Space`/`F1`/`RightAlt` 等。
 - Windows/macOS 的 key listener 目前只在启动时读取一次 `config.json`；修改配置后需要重启应用才会影响全局触发。
 
 ### 权限与可用性
@@ -88,7 +88,7 @@
   - 再次双击：停止 → 转写 → 粘贴
 
 ### 5) 全局触发（Windows）
-- 默认热键：`Win+Shift+D`（或在 Settings 修改后重启应用）。
+- 默认热键：`Ctrl`（或在 Settings 修改后重启应用）。
 - Hold：
   - 按住超过 holdMs：开始 Recording
   - 松开：停止 → 转写 → 粘贴

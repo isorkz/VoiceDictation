@@ -4,7 +4,6 @@ use std::time::{Duration, Instant};
 use tauri::AppHandle;
 use windows::Win32::Foundation::{HINSTANCE, LPARAM, LRESULT, WPARAM};
 use windows::Win32::System::LibraryLoader::GetModuleHandleW;
-use windows::Win32::UI::Input::KeyboardAndMouse::{VK_LSHIFT, VK_RSHIFT};
 use windows::Win32::UI::WindowsAndMessaging::{
     CallNextHookEx, DispatchMessageW, GetMessageW, SetWindowsHookExW, TranslateMessage, UnhookWindowsHookEx,
     HHOOK, KBDLLHOOKSTRUCT, MSG, WH_KEYBOARD_LL, WM_KEYDOWN, WM_KEYUP, WM_SYSKEYDOWN, WM_SYSKEYUP,
@@ -41,6 +40,19 @@ static HOTKEY: OnceLock<Mutex<Hotkey>> = OnceLock::new();
 static THRESHOLDS: OnceLock<Mutex<Thresholds>> = OnceLock::new();
 static STATE: OnceLock<Mutex<State>> = OnceLock::new();
 static HOOK: OnceLock<Mutex<Option<HHOOK>>> = OnceLock::new();
+
+const VK_WIN: u32 = 0x5B;
+const VK_LWIN: u32 = 0x5B;
+const VK_RWIN: u32 = 0x5C;
+const VK_SHIFT: u32 = 0x10;
+const VK_LSHIFT: u32 = 0xA0;
+const VK_RSHIFT: u32 = 0xA1;
+const VK_CTRL: u32 = 0x11;
+const VK_LCTRL: u32 = 0xA2;
+const VK_RCTRL: u32 = 0xA3;
+const VK_ALT: u32 = 0x12;
+const VK_LALT: u32 = 0xA4;
+const VK_RALT: u32 = 0xA5;
 
 pub fn init(app: &AppHandle) -> Result<(), String> {
     APP.set(app.clone()).ok();
@@ -108,7 +120,7 @@ unsafe extern "system" fn hook_proc(code: i32, wparam: WPARAM, lparam: LPARAM) -
         .get()
         .and_then(|m| m.lock().ok())
         .map(|g| *g)
-        .unwrap_or(parse_hotkey("Win+Shift+D"));
+        .unwrap_or(parse_hotkey("Ctrl"));
     let thresholds = THRESHOLDS
         .get()
         .and_then(|m| m.lock().ok())
@@ -122,18 +134,15 @@ unsafe extern "system" fn hook_proc(code: i32, wparam: WPARAM, lparam: LPARAM) -
         None => return CallNextHookEx(None, code, wparam, lparam),
     };
 
-    const VK_LSHIFT_U32: u32 = VK_LSHIFT.0 as u32;
-    const VK_RSHIFT_U32: u32 = VK_RSHIFT.0 as u32;
-
     match vk {
-        0x5B | 0x5C => st.pressed_win = is_down,
-        VK_LSHIFT_U32 | VK_RSHIFT_U32 => st.pressed_shift = is_down,
-        0x11 => st.pressed_ctrl = is_down,
-        0x12 => st.pressed_alt = is_down,
+        VK_LWIN | VK_RWIN => st.pressed_win = is_down,
+        VK_SHIFT | VK_LSHIFT | VK_RSHIFT => st.pressed_shift = is_down,
+        VK_CTRL | VK_LCTRL | VK_RCTRL => st.pressed_ctrl = is_down,
+        VK_ALT | VK_LALT | VK_RALT => st.pressed_alt = is_down,
         _ => {}
     }
 
-    if vk == hotkey.key_vk {
+    if key_matches(hotkey.key_vk, vk) {
         if is_down && !st.pressed_key {
             st.pressed_key = true;
             let pressed_at = Instant::now();
@@ -191,6 +200,16 @@ fn modifiers_match(hk: &Hotkey, st: &State) -> bool {
         && (!hk.alt || st.pressed_alt)
 }
 
+fn key_matches(key_vk: u32, vk: u32) -> bool {
+    match key_vk {
+        VK_SHIFT => matches!(vk, VK_SHIFT | VK_LSHIFT | VK_RSHIFT),
+        VK_CTRL => matches!(vk, VK_CTRL | VK_LCTRL | VK_RCTRL),
+        VK_ALT => matches!(vk, VK_ALT | VK_LALT | VK_RALT),
+        VK_WIN => matches!(vk, VK_LWIN | VK_RWIN),
+        _ => key_vk == vk,
+    }
+}
+
 fn spawn_hold_timer(hold_ms: u64, pressed_at: Instant) {
     std::thread::spawn(move || {
         std::thread::sleep(Duration::from_millis(hold_ms));
@@ -220,6 +239,8 @@ fn parse_hotkey(input: &str) -> Hotkey {
         key_vk: 0x44, // D
     };
 
+    let mut has_key = false;
+
     for part in input.split('+').map(|s| s.trim()).filter(|s| !s.is_empty()) {
         match part.to_ascii_lowercase().as_str() {
             "win" | "meta" | "super" => hk.win = true,
@@ -228,8 +249,29 @@ fn parse_hotkey(input: &str) -> Hotkey {
             "alt" => hk.alt = true,
             k if k.len() == 1 => {
                 hk.key_vk = k.as_bytes()[0].to_ascii_uppercase() as u32;
+                has_key = true;
             }
             _ => {}
+        }
+    }
+
+    // Allow a pure modifier hotkey like "Ctrl" to work as a trigger key.
+    if !has_key {
+        let modifier_count = hk.win as u8 + hk.shift as u8 + hk.ctrl as u8 + hk.alt as u8;
+        if modifier_count == 1 {
+            if hk.win {
+                hk.win = false;
+                hk.key_vk = VK_WIN;
+            } else if hk.shift {
+                hk.shift = false;
+                hk.key_vk = VK_SHIFT;
+            } else if hk.ctrl {
+                hk.ctrl = false;
+                hk.key_vk = VK_CTRL;
+            } else if hk.alt {
+                hk.alt = false;
+                hk.key_vk = VK_ALT;
+            }
         }
     }
 

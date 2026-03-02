@@ -35,7 +35,7 @@ type Status = {
 
 const defaultConfig: Config = {
   azure: { endpoint: "", deployment: "", apiVersion: "2025-03-01-preview", apiKey: "" },
-  hotkey: { windows: "Win+Shift+D" },
+  hotkey: { windows: "Ctrl" },
   thresholds: { holdMs: 180, doubleClickMs: 300 },
   recording: { maxSeconds: 120 },
   insert: { restoreClipboard: true, postfix: "none" },
@@ -350,7 +350,7 @@ function App() {
                       hotkey: { ...prev.hotkey, windows: value },
                     }));
                   }}
-                  placeholder="Win+Shift+D"
+                  placeholder="Ctrl"
                 />
               </label>
 

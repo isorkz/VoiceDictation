@@ -80,7 +80,7 @@ impl Default for AzureConfig {
 impl Default for HotkeyConfig {
     fn default() -> Self {
         Self {
-            windows: "Win+Shift+D".to_string(),
+            windows: "Ctrl".to_string(),
         }
     }
 }
