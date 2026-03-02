@@ -33,9 +33,15 @@
 
 ### 3) GitHub Actions
 - 发布 workflow 会先检查 `CHANGELOG.md` 是否包含 `## [X.Y.Z]` 对应版本标题；缺失则发布失败。
+- 发布 workflow 会检查 `tag` 版本必须与以下版本完全一致，不一致则发布失败：
+  - `package.json` `version`
+  - `src-tauri/tauri.conf.json` `version`
+  - `src-tauri/Cargo.toml` `version`
+- 发布说明（Release body）会从 `CHANGELOG.md` 的 `## [X.Y.Z]` 小节自动提取，不再使用固定文案。
 - 自动构建 macOS 产物。
 - 对 `.app` 做 ad-hoc 重新签名，避免 Gatekeeper 报 “damaged”。
 - 使用本地 `hdiutil` 重新打包 DMG。
+- Windows 产物会在上传前按 tag 版本统一命名，避免版本号展示不一致。
 - 发布到 GitHub Releases。
   - Workflow 文件：`.github/workflows/release.yml`
 

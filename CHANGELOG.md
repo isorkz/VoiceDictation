@@ -6,6 +6,9 @@ The format is based on Keep a Changelog, and this project adheres to Semantic Ve
 
 ## [Unreleased]
 - TBD
+- Release workflow now enforces tag/version alignment across `package.json`, `tauri.conf.json`, and `Cargo.toml`.
+- Release notes are now generated from the matching `CHANGELOG.md` section instead of a fixed message.
+- Windows release asset filenames are normalized to the tag version before upload.
 
 ## [1.0.1] - 2026-03-02
 - Windows trigger key changed to `Ctrl` by default, with support for double-click toggle and hold-to-talk behavior.
