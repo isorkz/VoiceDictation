@@ -11,6 +11,7 @@ pub struct Config {
     pub thresholds: ThresholdsConfig,
     pub recording: RecordingConfig,
     pub insert: InsertConfig,
+    pub sound: SoundConfig,
 }
 
 #[derive(Debug, Clone, Serialize, Deserialize)]
@@ -48,6 +49,12 @@ pub struct InsertConfig {
     pub postfix: InsertPostfix,
 }
 
+#[derive(Debug, Clone, Serialize, Deserialize)]
+#[serde(default, rename_all = "camelCase")]
+pub struct SoundConfig {
+    pub enabled: bool,
+}
+
 #[derive(Debug, Clone, Copy, Serialize, Deserialize)]
 #[serde(rename_all = "camelCase")]
 pub enum InsertPostfix {
@@ -62,6 +69,7 @@ impl Default for Config {
             thresholds: ThresholdsConfig::default(),
             recording: RecordingConfig::default(),
             insert: InsertConfig::default(),
+            sound: SoundConfig::default(),
         }
     }
 }
@@ -106,6 +114,12 @@ impl Default for InsertConfig {
             restore_clipboard: true,
             postfix: InsertPostfix::None,
         }
+    }
+}
+
+impl Default for SoundConfig {
+    fn default() -> Self {
+        Self { enabled: true }
     }
 }
 

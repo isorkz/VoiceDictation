@@ -10,7 +10,7 @@
 
 ### 配置与 UI
 - `config.json`（含 `azure.apiKey`）读写与默认值（Rust：`src-tauri/src/config.rs`）。
-- Settings UI：编辑 `endpoint/deployment/apiVersion`、Windows hotkey 字符串、hold/doubleClick 阈值、maxSeconds、restoreClipboard、autostart 开关（TS：`src/App.tsx`）。
+- Settings UI：编辑 `endpoint/deployment/apiVersion`、Windows hotkey 字符串、hold/doubleClick 阈值、maxSeconds、restoreClipboard、autostart 开关、提示音开关（TS：`src/App.tsx`）。
 - API key 写入 `config.json`：`azure.apiKey`（UI 显示 set/not set）。
 
 ### 录音 → 转写 → 写入

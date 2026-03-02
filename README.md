@@ -110,6 +110,8 @@ VoiceDictation supports:
 
 You can change this in Settings (`Hotkey -> Windows default hotkey`) and restart the app to apply.
 
+Prompt sounds for start/stop can be toggled in Settings (`Sound -> Enable sounds`).
+
 ### Updates
 
 Download new versions from GitHub Releases and install manually.

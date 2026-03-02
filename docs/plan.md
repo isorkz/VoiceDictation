@@ -46,6 +46,7 @@ Config（存储为 JSON）字段（全部在 UI 可编辑）：
 - `recording.maxSeconds`（默认：120s；toggle 模式同样限制）
 - `insert.restoreClipboard`（默认：true）
 - `insert.postfix`（默认：无额外换行/空格）
+- `sound.enabled`（默认：true）
 
 ## Core Data Flow（状态机）
 - States：`Idle` → `Recording` → `Transcribing` → `Inserting` → `Idle`（或 `Error`）
@@ -110,6 +111,7 @@ Config（存储为 JSON）字段（全部在 UI 可编辑）：
   - Hotkeys：Windows 默认热键可编辑；macOS 显示 Language(Globe/Fn) 键说明（hold/double-click）
   - Thresholds：holdMs / doubleClickMs / maxSeconds
   - Insert：restoreClipboard（开关）+ postfix（先固定 No extra）
+  - Sound：enabled（开关）
   - Test：按钮上用括号显示固定测试时长（当前为 3s），让用户知道每次测试会录音多久
 
 ## Implementation Steps（按小步提交；脚手架一次性生成除外）

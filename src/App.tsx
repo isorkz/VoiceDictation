@@ -26,6 +26,9 @@ type Config = {
     restoreClipboard: boolean;
     postfix: InsertPostfix;
   };
+  sound: {
+    enabled: boolean;
+  };
 };
 
 type Status = {
@@ -39,6 +42,7 @@ const defaultConfig: Config = {
   thresholds: { holdMs: 180, doubleClickMs: 300 },
   recording: { maxSeconds: 120 },
   insert: { restoreClipboard: true, postfix: "none" },
+  sound: { enabled: true },
 };
 
 function Button({
@@ -448,6 +452,23 @@ function App() {
                   setConfig((prev) => ({
                     ...prev,
                     insert: { ...prev.insert, restoreClipboard: checked },
+                  }));
+                }}
+              />
+            </label>
+          </Card>
+
+          <Card title="Sound" description="Prompt sound effects for recording actions.">
+            <label className="flex items-center justify-between gap-4">
+              <span className="text-sm font-medium text-slate-800 dark:text-slate-200">
+                Enable sounds
+              </span>
+              <Switch
+                checked={config.sound.enabled}
+                onChange={(checked) => {
+                  setConfig((prev) => ({
+                    ...prev,
+                    sound: { enabled: checked },
                   }));
                 }}
               />

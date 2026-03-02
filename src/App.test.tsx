@@ -18,6 +18,7 @@ const baseConfig = {
   thresholds: { holdMs: 180, doubleClickMs: 300 },
   recording: { maxSeconds: 120 },
   insert: { restoreClipboard: false, postfix: "none" },
+  sound: { enabled: true },
 };
 
 function mockInvoke() {

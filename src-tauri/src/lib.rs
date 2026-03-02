@@ -237,7 +237,9 @@ pub(crate) async fn toggle_recording_impl(app: tauri::AppHandle) -> Result<(), S
     let status = s.status.clone();
     drop(s);
     emit_status(&app, &status);
-    play_start_sound();
+    if cfg.sound.enabled {
+        play_start_sound();
+    }
 
     let app2 = app.clone();
     tauri::async_runtime::spawn_blocking(move || {
@@ -289,7 +291,9 @@ pub(crate) async fn stop_recording_impl(app: tauri::AppHandle) -> Result<(), Str
         (handle, wav_path, status)
     };
     emit_status(&app, &transcribing_status);
-    play_stop_sound();
+    if cfg.sound.enabled {
+        play_stop_sound();
+    }
 
     let stop_result = tauri::async_runtime::spawn_blocking(move || handle.stop())
         .await
