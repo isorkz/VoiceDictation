@@ -1,6 +1,6 @@
 [package]
 name = "voice-dictation"
-version = "1.0.0"
+version = "1.0.1"
 description = "VoiceDictation - Speech-to-text tool"
 authors = ["isorkz"]
 edition = "2021"
