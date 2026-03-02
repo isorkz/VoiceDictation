@@ -6,6 +6,7 @@ The format is based on Keep a Changelog, and this project adheres to Semantic Ve
 
 ## [Unreleased]
 - TBD
+- Enforce a release gate: tag version must exist in `CHANGELOG.md` before GitHub Release workflow can proceed.
 
 ## [1.0.0] - 2026-02-22 (planned)
 - Initial public release.

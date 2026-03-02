@@ -20,6 +20,17 @@ jobs:
     steps:
       - uses: actions/checkout@v4
 
+      - name: Validate changelog entry
+        shell: bash
+        run: |
+          VERSION="${GITHUB_REF_NAME#v}"
+          VERSION_REGEX="$(printf '%s' "$VERSION" | sed -E 's/[][(){}.^$*+?|\\/]/\\&/g')"
+          if ! grep -Eq "^## \[$VERSION_REGEX\]( |$)" CHANGELOG.md; then
+            echo "Missing changelog entry for version $VERSION in CHANGELOG.md"
+            echo "Expected a heading like: ## [$VERSION] - YYYY-MM-DD"
+            exit 1
+          fi
+
       - uses: actions/setup-node@v4
         with:
           node-version: 20

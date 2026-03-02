@@ -32,6 +32,7 @@
 - `git push --tags`
 
 ### 3) GitHub Actions
+- 发布 workflow 会先检查 `CHANGELOG.md` 是否包含 `## [X.Y.Z]` 对应版本标题；缺失则发布失败。
 - 自动构建 macOS 产物。
 - 对 `.app` 做 ad-hoc 重新签名，避免 Gatekeeper 报 “damaged”。
 - 使用本地 `hdiutil` 重新打包 DMG。
